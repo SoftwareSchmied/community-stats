@@ -1,0 +1,32 @@
+{
+  "entity": {
+    "sensor": {
+      "installations_total": {
+        "default": "mdi:home-analytics"
+      },
+      "installations_version": {
+        "default": "mdi:counter"
+      },
+      "downloads_total": {
+        "default": "mdi:download"
+      },
+      "downloads_version": {
+        "default": "mdi:download"
+      },
+      "installations_status": {
+        "default": "mdi:cloud-check-outline"
+      },
+      "downloads_status": {
+        "default": "mdi:github"
+      },
+      "downloads_remaining": {
+        "default": "mdi:counter"
+      }
+    },
+    "button": {
+      "refresh": {
+        "default": "mdi:refresh"
+      }
+    }
+  }
+}

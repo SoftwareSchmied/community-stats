@@ -1,0 +1,26 @@
+name: Bug report
+description: Report a problem with Community Stats
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Community Stats and Home Assistant versions
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Include the expected result and steps to reproduce it.
+    validations:
+      required: true
+  - type: textarea
+    id: sources
+    attributes:
+      label: Affected project and source status
+      description: Include the public integration domain or repository and the Analytics/GitHub status sensor values. Do not include tokens.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or redacted diagnostics
+      description: Remove personal information and credentials before attaching files.

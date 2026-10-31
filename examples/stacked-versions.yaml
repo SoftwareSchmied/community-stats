@@ -1,0 +1,22 @@
+# Optional: requires the ApexCharts Card dashboard resource.
+# These are examples, not a complete distribution: untracked versions are omitted.
+# Missing values must remain gaps rather than being converted to zero.
+type: custom:apexcharts-card
+header:
+  show: true
+  title: Reported installations by version
+graph_span: 30d
+stacked: true
+series:
+  - entity: sensor.bosch_buderus_heating_installations_0_8_2
+    name: 0.8.2
+    type: area
+    statistics:
+      type: mean
+      period: hour
+  - entity: sensor.bosch_buderus_heating_installations_0_8_3_beta_1
+    name: 0.8.3-beta.1
+    type: area
+    statistics:
+      type: mean
+      period: hour

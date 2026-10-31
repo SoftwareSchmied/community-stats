@@ -1,0 +1,167 @@
+{
+  "title": "Community Stats",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add a project",
+        "description": "Monitor projects even when they are not installed locally. Enter a domain, a public GitHub repository, or both. Known mappings are suggested. Core integrations only have installation totals. Select a source explicitly to add a domain that is not yet present in Analytics.",
+        "data": {
+          "integration_domain": "Integration domain",
+          "repository": "GitHub repository",
+          "analytics_source": "Installation statistics",
+          "discover_repository": "Suggest a GitHub repository from the installed integration",
+          "access_token": "GitHub token (optional)"
+        }
+      },
+      "integration": {
+        "title": "Select an integration in the repository",
+        "data": {
+          "integration_domain": "Integration domain"
+        }
+      },
+      "project": {
+        "title": "Review sources and configure sensors",
+        "description": "Integration: {integration}\n\nAnalytics source: {source}\n\nGitHub: {repository}\n\nFiles from a recent release: {assets}\n\nReview the suggested mapping. Filename patterns apply to all releases; * counts every file, including alternative packages. Versions are selected by count. Previously tracked versions continue to be updated permanently.",
+        "data": {
+          "name": "Project name",
+          "top_versions": "Top versions to discover per source",
+          "include_prereleases": "Include prereleases in new top-version selections",
+          "update_interval": "Update interval (hours)",
+          "asset_patterns": "Release filenames or patterns (one per line)"
+        }
+      }
+    },
+    "error": {
+      "project_required": "Enter an integration domain or a GitHub repository.",
+      "invalid_domain": "Use the integration domain, with lowercase letters, digits and underscores.",
+      "invalid_repository": "Enter owner/repository or a valid HTTPS GitHub repository URL.",
+      "patterns_required": "Choose at least one release filename or pattern, such as *.zip. Multiple patterns count every matching file once.",
+      "name_required": "Enter a project name.",
+      "cannot_connect": "Could not connect. Try again later.",
+      "invalid_data": "The source returned an unexpected data format.",
+      "not_found": "The requested GitHub repository or file was not found, or is not accessible.",
+      "rate_limited": "GitHub's request budget is exhausted. Wait for it to reset, or configure a token.",
+      "invalid_auth": "GitHub rejected the token. Check or remove it.",
+      "access_denied": "GitHub denied access to this resource.",
+      "repository_moved": "The GitHub repository moved. Enter its current owner/name.",
+      "public_repository_required": "Choose a public GitHub repository.",
+      "core_repository": "Core integration downloads cannot be separated from Home Assistant Core. Leave the repository empty.",
+      "no_matching_assets": "No release files match the selected patterns."
+    },
+    "abort": {
+      "already_configured": "This project is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Project settings",
+        "description": "Previously tracked versions are retained even outside the top selection. Changing the repository or filename patterns starts new download series. Leave the token blank to keep the saved token. Manual refresh respects a five-minute cache window and GitHub limits.",
+        "data": {
+          "top_versions": "Top versions to discover per source",
+          "include_prereleases": "Include prereleases in new top-version selections",
+          "update_interval": "Update interval (hours)",
+          "repository": "GitHub repository",
+          "asset_patterns": "Release filenames or patterns (one per line)",
+          "access_token": "GitHub token (optional)",
+          "clear_token": "Remove the saved GitHub token"
+        }
+      }
+    },
+    "error": {
+      "project_required": "Enter an integration domain or a GitHub repository.",
+      "invalid_domain": "Use the integration domain, with lowercase letters, digits and underscores.",
+      "invalid_repository": "Enter owner/repository or a valid HTTPS GitHub repository URL.",
+      "patterns_required": "Choose at least one release filename or pattern, such as *.zip. Multiple patterns count every matching file once.",
+      "name_required": "Enter a project name.",
+      "cannot_connect": "Could not connect. Try again later.",
+      "invalid_data": "The source returned an unexpected data format.",
+      "not_found": "The requested GitHub repository or file was not found, or is not accessible.",
+      "rate_limited": "GitHub's request budget is exhausted. Wait for it to reset, or configure a token.",
+      "invalid_auth": "GitHub rejected the token. Check or remove it.",
+      "access_denied": "GitHub denied access to this resource.",
+      "repository_moved": "The GitHub repository moved. Enter its current owner/name.",
+      "public_repository_required": "Choose a public GitHub repository.",
+      "core_repository": "Core integration downloads cannot be separated from Home Assistant Core. Leave the repository empty.",
+      "no_matching_assets": "No release files match the selected patterns.",
+      "already_configured": "This project is already configured."
+    }
+  },
+  "selector": {
+    "analytics_source": {
+      "options": {
+        "auto": "Detect automatically",
+        "custom": "Custom integration",
+        "core": "Core integration"
+      }
+    },
+    "integration_choice": {
+      "options": {
+        "downloads-only": "GitHub downloads only"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "installations_total": {
+        "name": "Reported installations"
+      },
+      "installations_version": {
+        "name": "Installations {version}"
+      },
+      "downloads_total": {
+        "name": "Release downloads total"
+      },
+      "downloads_version": {
+        "name": "Downloads {version}"
+      },
+      "installations_status": {
+        "name": "Analytics status",
+        "state": {
+          "ok": "OK",
+          "disabled": "Not configured",
+          "cannot_connect": "Connection failed",
+          "invalid_data": "Invalid source data",
+          "not_found": "No data found",
+          "rate_limited": "Rate limited",
+          "invalid_auth": "Invalid GitHub token",
+          "access_denied": "Access denied",
+          "no_matching_assets": "No matching release files",
+          "repository_moved": "Repository moved"
+        }
+      },
+      "downloads_status": {
+        "name": "GitHub status",
+        "state": {
+          "ok": "OK",
+          "disabled": "Not configured",
+          "cannot_connect": "Connection failed",
+          "invalid_data": "Invalid source data",
+          "not_found": "No data found",
+          "rate_limited": "Rate limited",
+          "invalid_auth": "Invalid GitHub token",
+          "access_denied": "Access denied",
+          "no_matching_assets": "No matching release files",
+          "repository_moved": "Repository moved"
+        }
+      },
+      "installations_last_success": {
+        "name": "Analytics last successful update"
+      },
+      "downloads_last_success": {
+        "name": "GitHub last successful update"
+      },
+      "downloads_remaining": {
+        "name": "GitHub requests remaining"
+      },
+      "downloads_retry_at": {
+        "name": "GitHub retry at"
+      }
+    },
+    "button": {
+      "refresh": {
+        "name": "Refresh"
+      }
+    }
+  }
+}

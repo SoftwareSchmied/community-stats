@@ -1,0 +1,12 @@
+{
+  "domain": "community_stats",
+  "name": "Community Stats",
+  "codeowners": ["@SoftwareSchmied"],
+  "config_flow": true,
+  "documentation": "https://github.com/SoftwareSchmied/community-stats",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/SoftwareSchmied/community-stats/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}

@@ -1,0 +1,167 @@
+{
+  "title": "Community Stats",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Projekt hinzufügen",
+        "description": "Beobachte auch Projekte, die bei dir nicht installiert sind. Gib eine Domain, ein öffentliches GitHub-Repository oder beides an. Eine bekannte Zuordnung wird vorgeschlagen. Core-Integrationen haben nur Installations-Gesamtzahlen. Mit einer ausdrücklich gewählten Statistikquelle kannst du auch eine Domain einrichten, die noch nicht in Analytics vorkommt.",
+        "data": {
+          "integration_domain": "Integrations-Domain",
+          "repository": "GitHub-Repository",
+          "analytics_source": "Installationsstatistik",
+          "discover_repository": "GitHub-Repository aus der installierten Integration vorschlagen",
+          "access_token": "GitHub-Token (optional)"
+        }
+      },
+      "integration": {
+        "title": "Integration im Repository auswählen",
+        "data": {
+          "integration_domain": "Integrations-Domain"
+        }
+      },
+      "project": {
+        "title": "Zuordnung prüfen und Sensoren einrichten",
+        "description": "Integration: {integration}\n\nStatistikquelle: {source}\n\nGitHub: {repository}\n\nDateien eines aktuellen Releases: {assets}\n\nPrüfe die vorgeschlagene Zuordnung. Dateimuster gelten für alle Releases; * zählt jede Datei, auch alternative Pakete. Versionen werden nach Anzahl ausgewählt. Bereits erfasste Versionen werden dauerhaft weitergeführt.",
+        "data": {
+          "name": "Projektname",
+          "top_versions": "Top-Versionen je Datenquelle neu erfassen",
+          "include_prereleases": "Vorabversionen bei der Auswahl neuer Top-Versionen berücksichtigen",
+          "update_interval": "Aktualisierungsintervall (Stunden)",
+          "asset_patterns": "Release-Dateinamen oder Muster (ein Muster pro Zeile)"
+        }
+      }
+    },
+    "error": {
+      "project_required": "Gib eine Integrations-Domain oder ein GitHub-Repository an.",
+      "invalid_domain": "Verwende die Domain mit Kleinbuchstaben, Ziffern und Unterstrichen.",
+      "invalid_repository": "Gib Besitzer/Repository oder die HTTPS-Adresse des GitHub-Repositories an.",
+      "patterns_required": "Wähle mindestens einen Release-Dateinamen oder ein Muster, beispielsweise *.zip. Jede passende Datei wird nur einmal gezählt.",
+      "name_required": "Gib einen Projektnamen an.",
+      "cannot_connect": "Verbindung fehlgeschlagen. Versuche es später erneut.",
+      "invalid_data": "Die Datenquelle hat ein unerwartetes Datenformat geliefert.",
+      "not_found": "Das GitHub-Repository oder die Datei wurde nicht gefunden oder ist nicht zugänglich.",
+      "rate_limited": "Das GitHub-Abfragekontingent ist aufgebraucht. Warte bis zur Freigabe oder hinterlege einen Token.",
+      "invalid_auth": "GitHub hat den Token abgelehnt. Prüfe oder entferne ihn.",
+      "access_denied": "GitHub hat den Zugriff auf diese Ressource verweigert.",
+      "repository_moved": "Das GitHub-Repository wurde verschoben. Gib den aktuellen Besitzer und Namen an.",
+      "public_repository_required": "Wähle ein öffentliches GitHub-Repository.",
+      "core_repository": "Downloads einer Core-Integration lassen sich nicht von Home Assistant Core trennen. Lass das Repository leer.",
+      "no_matching_assets": "Keine Release-Dateien entsprechen den gewählten Mustern."
+    },
+    "abort": {
+      "already_configured": "Dieses Projekt ist bereits eingerichtet."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Projekteinstellungen",
+        "description": "Bereits erfasste Versionen bleiben erhalten, auch außerhalb der Top-Auswahl. Ein geändertes Repository oder andere Dateimuster erzeugen neue Download-Messreihen. Lass das Token-Feld leer, um den gespeicherten Token zu behalten. Manuelle Aktualisierungen beachten ein Zeitfenster von fünf Minuten und die GitHub-Limits.",
+        "data": {
+          "top_versions": "Top-Versionen je Datenquelle neu erfassen",
+          "include_prereleases": "Vorabversionen bei der Auswahl neuer Top-Versionen berücksichtigen",
+          "update_interval": "Aktualisierungsintervall (Stunden)",
+          "repository": "GitHub-Repository",
+          "asset_patterns": "Release-Dateinamen oder Muster (ein Muster pro Zeile)",
+          "access_token": "GitHub-Token (optional)",
+          "clear_token": "Gespeicherten GitHub-Token entfernen"
+        }
+      }
+    },
+    "error": {
+      "project_required": "Gib eine Integrations-Domain oder ein GitHub-Repository an.",
+      "invalid_domain": "Verwende die Domain mit Kleinbuchstaben, Ziffern und Unterstrichen.",
+      "invalid_repository": "Gib Besitzer/Repository oder die HTTPS-Adresse des GitHub-Repositories an.",
+      "patterns_required": "Wähle mindestens einen Release-Dateinamen oder ein Muster, beispielsweise *.zip. Jede passende Datei wird nur einmal gezählt.",
+      "name_required": "Gib einen Projektnamen an.",
+      "cannot_connect": "Verbindung fehlgeschlagen. Versuche es später erneut.",
+      "invalid_data": "Die Datenquelle hat ein unerwartetes Datenformat geliefert.",
+      "not_found": "Das GitHub-Repository oder die Datei wurde nicht gefunden oder ist nicht zugänglich.",
+      "rate_limited": "Das GitHub-Abfragekontingent ist aufgebraucht. Warte bis zur Freigabe oder hinterlege einen Token.",
+      "invalid_auth": "GitHub hat den Token abgelehnt. Prüfe oder entferne ihn.",
+      "access_denied": "GitHub hat den Zugriff auf diese Ressource verweigert.",
+      "repository_moved": "Das GitHub-Repository wurde verschoben. Gib den aktuellen Besitzer und Namen an.",
+      "public_repository_required": "Wähle ein öffentliches GitHub-Repository.",
+      "core_repository": "Downloads einer Core-Integration lassen sich nicht von Home Assistant Core trennen. Lass das Repository leer.",
+      "no_matching_assets": "Keine Release-Dateien entsprechen den gewählten Mustern.",
+      "already_configured": "Dieses Projekt ist bereits eingerichtet."
+    }
+  },
+  "selector": {
+    "analytics_source": {
+      "options": {
+        "auto": "Automatisch erkennen",
+        "custom": "Benutzerdefinierte Integration",
+        "core": "Core-Integration"
+      }
+    },
+    "integration_choice": {
+      "options": {
+        "downloads-only": "Nur GitHub-Downloads"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "installations_total": {
+        "name": "Gemeldete Installationen"
+      },
+      "installations_version": {
+        "name": "Installationen {version}"
+      },
+      "downloads_total": {
+        "name": "Release-Downloads gesamt"
+      },
+      "downloads_version": {
+        "name": "Downloads {version}"
+      },
+      "installations_status": {
+        "name": "Analytics-Status",
+        "state": {
+          "ok": "OK",
+          "disabled": "Nicht eingerichtet",
+          "cannot_connect": "Verbindung fehlgeschlagen",
+          "invalid_data": "Ungültige Quelldaten",
+          "not_found": "Keine Daten gefunden",
+          "rate_limited": "Abfragelimit erreicht",
+          "invalid_auth": "Ungültiger GitHub-Token",
+          "access_denied": "Zugriff verweigert",
+          "no_matching_assets": "Keine passenden Release-Dateien",
+          "repository_moved": "Repository verschoben"
+        }
+      },
+      "downloads_status": {
+        "name": "GitHub-Status",
+        "state": {
+          "ok": "OK",
+          "disabled": "Nicht eingerichtet",
+          "cannot_connect": "Verbindung fehlgeschlagen",
+          "invalid_data": "Ungültige Quelldaten",
+          "not_found": "Keine Daten gefunden",
+          "rate_limited": "Abfragelimit erreicht",
+          "invalid_auth": "Ungültiger GitHub-Token",
+          "access_denied": "Zugriff verweigert",
+          "no_matching_assets": "Keine passenden Release-Dateien",
+          "repository_moved": "Repository verschoben"
+        }
+      },
+      "installations_last_success": {
+        "name": "Analytics zuletzt erfolgreich"
+      },
+      "downloads_last_success": {
+        "name": "GitHub zuletzt erfolgreich"
+      },
+      "downloads_remaining": {
+        "name": "Verbleibende GitHub-Anfragen"
+      },
+      "downloads_retry_at": {
+        "name": "Nächster GitHub-Versuch"
+      }
+    },
+    "button": {
+      "refresh": {
+        "name": "Aktualisieren"
+      }
+    }
+  }
+}

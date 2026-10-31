@@ -1,0 +1,36 @@
+# Replace every example entity ID with the IDs created in your installation.
+# Native Home Assistant cards; no external database or extra dashboard card needed.
+type: vertical-stack
+cards:
+  - type: entities
+    title: Community Stats
+    entities:
+      - sensor.bosch_buderus_heating_reported_installations
+      - sensor.bosch_buderus_heating_release_downloads_total
+      - sensor.heatpump_hydraulic_card_release_downloads_total
+      - button.bosch_buderus_heating_refresh
+  - type: history-graph
+    title: Recent installation history
+    hours_to_show: 168
+    entities:
+      - sensor.bosch_buderus_heating_reported_installations
+      - sensor.mqtt_reported_installations
+  - type: statistics-graph
+    title: Reported installations by version
+    days_to_show: 90
+    chart_type: line
+    period: day
+    stat_types:
+      - mean
+    entities:
+      - sensor.bosch_buderus_heating_installations_0_8_2
+      - sensor.bosch_buderus_heating_installations_0_8_3_beta_1
+  - type: statistics-graph
+    title: Cumulative release downloads
+    days_to_show: 90
+    chart_type: line
+    period: day
+    stat_types:
+      - mean
+    entities:
+      - sensor.heatpump_hydraulic_card_release_downloads_total
