@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.0
+
+- Select GitHub download versions by release publication time so new releases appear even with zero downloads.
+- Keep installation-version selection based on the highest reported installation counts.
+- Preserve existing version sensors and histories when releases leave the current selection.
+- Expose the current GitHub selection and publication date as sensor attributes, with an optional dynamic dashboard example.
+- Restore publication metadata across restarts and safely read caches created by older versions.
+
 ## 0.3.1
 
 - Show the top-version count and update interval in editable number boxes during setup and configuration.

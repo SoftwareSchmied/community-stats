@@ -127,6 +127,17 @@ class CountSensor(CommunityStatsEntity, SensorEntity):
             attributes["asset_patterns"] = self.coordinator.patterns
             if self.version is not None:
                 attributes["release_tag"] = self.version
+                attributes["in_current_selection"] = (
+                    self.version in (self.coordinator.selected_versions["downloads"])
+                )
+                published = self.coordinator.states["downloads"].counts.published_at.get(
+                    self.version
+                )
+                attributes["published_at"] = (
+                    dt_util.utc_from_timestamp(published).isoformat()
+                    if published is not None
+                    else None
+                )
         return attributes
 
 

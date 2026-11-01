@@ -31,15 +31,15 @@
         "description": "Integration: {integration}\n\nStatistikquelle: {source}\n\nGitHub: {repository}\n\nDateien eines aktuellen Releases: {assets}\n\nPrüfe die Zuordnung. Passende Download-Dateien werden über alle veröffentlichten Releases gezählt.",
         "data": {
           "name": "Projektname",
-          "top_versions": "Anzahl neuer Top-Versionen je Datenquelle",
-          "include_prereleases": "Vorabversionen bei der Auswahl neuer Top-Versionen berücksichtigen",
+          "top_versions": "Anzahl Versionen je Datenquelle",
+          "include_prereleases": "Vorabversionen bei der Auswahl neuer Versionen berücksichtigen",
           "update_interval": "Aktualisierungsintervall",
           "asset_patterns": "Dateien für Downloadzahlen"
         },
         "data_description": {
           "name": "Frei wählbarer Gerätename, zum Beispiel Community Stats.",
-          "top_versions": "Beispiel: 10 erfasst die zehn Versionen mit den höchsten Installations- oder Downloadzahlen neu. Einstellbar: 1–100. Bereits erfasste Versionen werden weiterhin aktualisiert.",
-          "include_prereleases": "Auch Betaversionen bei der Auswahl neuer Top-Versionen berücksichtigen. Bereits erfasste Versionen und Gesamtsummen bleiben davon unabhängig.",
+          "top_versions": "Beispiel 10: Bei Installationen werden die zehn häufigsten Versionen ausgewählt. Bei GitHub die zehn zuletzt veröffentlichten Releases mit passenden Download-Dateien, auch mit 0 Downloads. Einstellbar: 1–100. Bereits erfasste Versionssensoren bleiben erhalten.",
+          "include_prereleases": "Auch Betaversionen bei der neuen Versionsauswahl berücksichtigen. Bereits erfasste Versionen und Gesamtsummen bleiben davon unabhängig.",
           "update_interval": "Beispiel: 12 bedeutet alle zwölf Stunden. Einstellbar: 1–168 Stunden. Gilt für Analytics und GitHub mit Token. Ohne Token wird alle 61 Minuten das nächste GitHub-Projekt abgefragt.",
           "asset_patterns": "Beispiel für Community Stats: community_stats.zip. Das ist der Name einer Datei aus den GitHub-Releases. *.zip zählt alle ZIP-Dateien. Ein Dateiname oder Muster je Zeile. Leer: keine Downloadsensoren; Sterne, Forks, Beobachter und Issues bleiben aktiv."
         }
@@ -71,8 +71,8 @@
         "title": "Projekteinstellungen",
         "description": "Ändere die Auswahl und Aktualisierung deines Projekts. Bereits erfasste Versionssensoren bleiben erhalten. Ein anderes Repository oder andere Dateimuster beginnen neue Download-Messreihen.",
         "data": {
-          "top_versions": "Anzahl neuer Top-Versionen je Datenquelle",
-          "include_prereleases": "Vorabversionen bei der Auswahl neuer Top-Versionen berücksichtigen",
+          "top_versions": "Anzahl Versionen je Datenquelle",
+          "include_prereleases": "Vorabversionen bei der Auswahl neuer Versionen berücksichtigen",
           "update_interval": "Aktualisierungsintervall",
           "repository": "GitHub-Repository",
           "asset_patterns": "Dateien für Downloadzahlen",
@@ -81,8 +81,8 @@
         },
         "data_description": {
           "repository": "Beispiel: SoftwareSchmied/community-stats oder {repository_example_url}. Verwende die GitHub-Adresse des Projekts, keine lokale HACS-Adresse. Für reine Installationszahlen leer lassen.",
-          "top_versions": "Beispiel: 10 erfasst die zehn Versionen mit den höchsten Installations- oder Downloadzahlen neu. Einstellbar: 1–100. Bereits erfasste Versionen werden weiterhin aktualisiert.",
-          "include_prereleases": "Auch Betaversionen bei der Auswahl neuer Top-Versionen berücksichtigen. Bereits erfasste Versionen und Gesamtsummen bleiben davon unabhängig.",
+          "top_versions": "Beispiel 10: Bei Installationen werden die zehn häufigsten Versionen ausgewählt. Bei GitHub die zehn zuletzt veröffentlichten Releases mit passenden Download-Dateien, auch mit 0 Downloads. Einstellbar: 1–100. Bereits erfasste Versionssensoren bleiben erhalten.",
+          "include_prereleases": "Auch Betaversionen bei der neuen Versionsauswahl berücksichtigen. Bereits erfasste Versionen und Gesamtsummen bleiben davon unabhängig.",
           "update_interval": "Beispiel: 12 bedeutet alle zwölf Stunden. Einstellbar: 1–168 Stunden. Gilt für Analytics und GitHub mit Token. Ohne Token wird alle 61 Minuten das nächste GitHub-Projekt abgefragt.",
           "asset_patterns": "Beispiel für Community Stats: community_stats.zip. Das ist der Name einer Datei aus den GitHub-Releases. *.zip zählt alle ZIP-Dateien. Ein Dateiname oder Muster je Zeile. Leer: keine Downloadsensoren; Sterne, Forks, Beobachter und Issues bleiben aktiv.",
           "access_token": "Leer lassen, um den gespeicherten Token zu behalten. Einen neuen Token hier einfügen; zum Entfernen die Option darunter verwenden. Manuelle Aktualisierungen beachten den Fünf-Minuten-Cache, die Warteschlange und GitHub-Limits.",

@@ -22,6 +22,7 @@ def releases():
         {
             "id": 11,
             "tag_name": "v0.8.2",
+            "published_at": "2026-10-01T12:00:00Z",
             "prerelease": False,
             "draft": False,
             "assets": [
@@ -32,6 +33,7 @@ def releases():
         {
             "id": 12,
             "tag_name": "v0.8.3-beta.1",
+            "published_at": "2026-10-10T12:00:00Z",
             "prerelease": True,
             "draft": False,
             "assets": [{"id": 103, "name": "project.zip", "download_count": 40}],

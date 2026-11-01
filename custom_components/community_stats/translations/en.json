@@ -31,15 +31,15 @@
         "description": "Integration: {integration}\n\nAnalytics source: {source}\n\nGitHub: {repository}\n\nFiles from a recent release: {assets}\n\nReview the mapping. Matching download files are counted across all published releases.",
         "data": {
           "name": "Project name",
-          "top_versions": "Number of top versions to discover per source",
-          "include_prereleases": "Include prereleases in new top-version selections",
+          "top_versions": "Number of versions per source",
+          "include_prereleases": "Include prereleases in new version selections",
           "update_interval": "Update interval",
           "asset_patterns": "Files for download counts"
         },
         "data_description": {
           "name": "Choose a device name, for example Community Stats.",
-          "top_versions": "Example: 10 discovers the ten versions with the highest installation or download counts. Range: 1–100. Previously tracked versions continue to update.",
-          "include_prereleases": "Include beta versions when selecting new top versions. Previously tracked versions and totals are unaffected.",
+          "top_versions": "Example 10: installations select the ten most common versions. GitHub selects the ten most recently published releases with matching download files, including zero downloads. Range: 1–100. Previously tracked version sensors are retained.",
+          "include_prereleases": "Include beta versions when selecting new versions. Previously tracked versions and totals are unaffected.",
           "update_interval": "Example: 12 means every twelve hours. Range: 1–168 hours. Applies to Analytics and GitHub with a token. Without a token, the next GitHub project is updated every 61 minutes.",
           "asset_patterns": "Community Stats example: community_stats.zip. This is the name of a file attached to GitHub releases. *.zip counts all ZIP files. Enter one filename or pattern per line. Empty: no download sensors; stars, forks, watchers and issues remain active."
         }
@@ -71,8 +71,8 @@
         "title": "Project settings",
         "description": "Change the selection and updates for your project. Previously tracked version sensors are retained. Changing the repository or filename patterns starts new download series.",
         "data": {
-          "top_versions": "Number of top versions to discover per source",
-          "include_prereleases": "Include prereleases in new top-version selections",
+          "top_versions": "Number of versions per source",
+          "include_prereleases": "Include prereleases in new version selections",
           "update_interval": "Update interval",
           "repository": "GitHub repository",
           "asset_patterns": "Files for download counts",
@@ -81,8 +81,8 @@
         },
         "data_description": {
           "repository": "Example: SoftwareSchmied/community-stats or {repository_example_url}. Use the project’s GitHub address, not a local HACS address. Leave empty for installation statistics only.",
-          "top_versions": "Example: 10 discovers the ten versions with the highest installation or download counts. Range: 1–100. Previously tracked versions continue to update.",
-          "include_prereleases": "Include beta versions when selecting new top versions. Previously tracked versions and totals are unaffected.",
+          "top_versions": "Example 10: installations select the ten most common versions. GitHub selects the ten most recently published releases with matching download files, including zero downloads. Range: 1–100. Previously tracked version sensors are retained.",
+          "include_prereleases": "Include beta versions when selecting new versions. Previously tracked versions and totals are unaffected.",
           "update_interval": "Example: 12 means every twelve hours. Range: 1–168 hours. Applies to Analytics and GitHub with a token. Without a token, the next GitHub project is updated every 61 minutes.",
           "asset_patterns": "Community Stats example: community_stats.zip. This is the name of a file attached to GitHub releases. *.zip counts all ZIP files. Enter one filename or pattern per line. Empty: no download sensors; stars, forks, watchers and issues remain active.",
           "access_token": "Leave empty to keep the saved token. Enter a new token here; use the option below to remove it. Manual updates respect the five-minute cache, the queue and GitHub limits.",

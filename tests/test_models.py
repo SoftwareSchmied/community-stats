@@ -5,6 +5,7 @@ import pytest
 from custom_components.community_stats.models import (
     Counts,
     SourceError,
+    latest_versions,
     normalize_repository,
     parse_analytics,
     parse_downloads,
@@ -57,6 +58,43 @@ def test_download_patterns_count_each_asset_once(releases):
     assert result.total == 215
     assert result.versions == {"v0.8.2": 175, "v0.8.3-beta.1": 40}
     assert parse_downloads(releases, ["*.zip"]).total == 190
+
+
+def test_latest_downloads_use_publication_date_even_with_zero_downloads(releases):
+    releases[0]["created_at"] = "2026-10-30T12:00:00Z"
+    releases[0]["tag_name"] = "v99.0.0"
+    releases[1]["created_at"] = "2026-09-01T12:00:00Z"
+    releases[1]["assets"][0]["download_count"] = 0
+    for ordered in (releases, list(reversed(releases))):
+        counts = parse_downloads(ordered, ["*.zip"])
+        assert counts.total == 150
+        assert latest_versions(counts, 1, True) == ["v0.8.3-beta.1"]
+        assert latest_versions(counts, 1, False) == ["v99.0.0"]
+        assert top_versions(counts, 1, True) == ["v99.0.0"]
+
+
+@pytest.mark.parametrize("published", [None, "", "invalid", "2026-10-10T12:00:00"])
+def test_unknown_publication_date_keeps_counts_but_cannot_rank_as_recent(releases, published):
+    releases[1]["published_at"] = published
+    counts = parse_downloads(releases, ["*.zip"])
+    assert counts.total == 190
+    assert counts.versions["v0.8.3-beta.1"] == 40
+    assert latest_versions(counts, 2, True) == ["v0.8.2"]
+
+
+def test_publication_ties_are_stable_across_time_zones_and_api_order(releases):
+    releases[1]["published_at"] = "2026-10-01T14:00:00+02:00"
+    for ordered in (releases, list(reversed(releases))):
+        counts = parse_downloads(ordered, ["*.zip"])
+        assert latest_versions(counts, 2, True) == ["v0.8.2", "v0.8.3-beta.1"]
+
+
+def test_latest_selection_excludes_drafts_and_releases_without_matching_files(releases):
+    releases[1]["assets"][0]["name"] = "checksums.txt"
+    assert latest_versions(parse_downloads(releases, ["*.zip"]), 2, True) == ["v0.8.2"]
+    releases[1]["assets"][0]["name"] = "project.zip"
+    releases[1]["draft"] = True
+    assert latest_versions(parse_downloads(releases, ["*.zip"]), 2, True) == ["v0.8.2"]
 
 
 def test_missing_download_assets_is_unavailable_but_explicit_zero_is_valid(releases):

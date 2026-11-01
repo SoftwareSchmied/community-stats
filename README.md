@@ -48,7 +48,7 @@ The confirmation step shows the proposed domain, source, repository and filename
 | GitHub repository | `SoftwareSchmied/community-stats` |
 | Installation statistics | Custom integration |
 | Project name | Community Stats |
-| Top versions | `10` |
+| Versions per source | `10` |
 | Update interval | `12` hours |
 | Files for download counts | `community_stats.zip` |
 
@@ -76,11 +76,15 @@ Repository and issue-source status sensors keep search failures separate from st
 
 Each configured source provides a total and, where available, sensors for exact versions. Installation versions and GitHub release tags remain separate: a manifest version `0.8.2` and a release tag `v0.8.2` are not assumed to be equivalent.
 
-The default is to discover the **10 most popular versions per source**, ranked by installation or download count, not publication date. You can choose 1–100. Exact spellings such as `0.8.3-beta.1`, `v0.8.2` and `0.8.2+local` are preserved. Ties use the exact string for deterministic ordering.
+The default is to select **10 versions per source**, configurable from 1 to 100. Installation sensors select the versions with the highest reported installation counts. GitHub download sensors select the **most recently published releases with matching files**, using GitHub's `published_at` timestamp. Download count, version number, commit date and API response order do not decide which releases are selected. A newly published release with zero downloads can therefore be selected on the next successful GitHub update.
 
-Once selected, a version's sensor is retained and continues to update even when it drops out of the top selection. Tracking survives restarts and option changes. Consequently, the number of version sensors can grow beyond the configured top count. Reducing that count does not erase existing sensors. Disable unwanted entities through Home Assistant if you no longer want to record them.
+Exact spellings such as `0.8.3-beta.1`, `v0.8.2` and `0.8.2+local` are preserved. Ties use the exact string for deterministic ordering. A release without a valid publication timestamp is excluded from the latest selection; its valid counts can still contribute to totals and existing sensors.
 
-Prereleases are included by default. Excluding them affects **new top-version selections**, not source totals or previously tracked sensors. A missing version becomes **unavailable**, not zero, and recovers under the same identity if it returns. An explicitly reported zero remains zero.
+Once selected, a version's sensor is retained and continues to update even when it leaves the current selection. Tracking survives restarts and option changes. Consequently, the number of version sensors can grow beyond the configured selection size. Reducing that count does not erase existing sensors. Disable unwanted entities through Home Assistant if you no longer want to record them.
+
+GitHub version sensors expose `in_current_selection` and `published_at` attributes. Filter on `in_current_selection: true` to display only the latest selected releases while retaining older histories. The optional [latest-release graph example](examples/latest-downloads.yaml) does this automatically using the Auto Entities dashboard card; install that card separately if you want to use the example.
+
+Prereleases are included by default. Excluding them affects **new version selections**, not source totals or previously tracked sensors. A missing version becomes **unavailable**, not zero, and recovers under the same identity if it returns. An explicitly reported zero remains zero.
 
 All count sensors use `state_class: measurement`. Installation counts may decrease; release asset deletion or replacement may also reduce download counts. Such decreases are not interpreted as counter resets. Recorder can keep hourly long-term min/max/mean statistics for enabled sensors. Detailed history retention follows your Recorder settings, and the sensors must not be excluded from recording. Statistics graphs show aggregates, not a reconstructed historical source feed.
 

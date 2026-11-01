@@ -31,6 +31,7 @@ from .models import (
     Counts,
     SourceError,
     SourceState,
+    latest_versions,
     parse_analytics,
     parse_downloads,
     parse_patterns,
@@ -70,6 +71,7 @@ class CommunityStatsCoordinator(DataUpdateCoordinator[dict[str, SourceState]]):
             "downloads": version_key(f"{self.repository.lower()}:{self.patterns}"),
         }
         self.tracked: dict[str, list[str]] = {}
+        self.selected_versions: dict[str, list[str]] = {"installations": [], "downloads": []}
         self.store = Store(hass, 1, f"{DOMAIN}.{entry.entry_id}")
         self._cancel_retry = None
         super().__init__(
@@ -115,6 +117,7 @@ class CommunityStatsCoordinator(DataUpdateCoordinator[dict[str, SourceState]]):
                 total=cached["total"],
                 versions=cached["versions"],
                 prereleases=set(cached["prereleases"]),
+                published_at=cached.get("published_at", {}),
             )
             state.metrics = cached["metrics"]
             state.status = cached["status"]
@@ -132,6 +135,7 @@ class CommunityStatsCoordinator(DataUpdateCoordinator[dict[str, SourceState]]):
                 "total": state.counts.total,
                 "versions": state.counts.versions,
                 "prereleases": sorted(state.counts.prereleases),
+                "published_at": state.counts.published_at,
                 "metrics": state.metrics,
                 "status": state.status,
                 "retry_at": state.retry_at,
@@ -203,7 +207,8 @@ class CommunityStatsCoordinator(DataUpdateCoordinator[dict[str, SourceState]]):
             if state.status != "ok":
                 continue
             previous = self.known_versions(source)
-            selected = top_versions(
+            select = latest_versions if source == "downloads" else top_versions
+            selected = self.selected_versions[source] = select(
                 state.counts,
                 self.settings.get(CONF_TOP, DEFAULT_TOP),
                 self.settings.get(CONF_PRERELEASE, True),

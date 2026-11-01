@@ -1,0 +1,18 @@
+# Requires the Auto Entities dashboard card, installed separately through HACS.
+# Change the source URL to the repository monitored by your Community Stats entry.
+# Old version sensors remain recorded; only the current selection appears here.
+type: custom:auto-entities
+card:
+  type: history-graph
+  title: Latest release downloads
+  hours_to_show: 168
+filter:
+  include:
+    - domain: sensor
+      attributes:
+        source: https://github.com/SoftwareSchmied/community-stats/releases
+        in_current_selection: true
+sort:
+  method: attribute
+  attribute: published_at
+  reverse: true

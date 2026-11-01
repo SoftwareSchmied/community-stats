@@ -286,9 +286,53 @@ async def test_turning_off_prereleases_retains_previously_selected_sensor(hass, 
     entry = await setup_project(hass, top_versions=3)
     beta = entity_id(hass, entry, "installations", "0.8.3-beta.1")
     assert hass.states.get(beta).state == "30"
+    github_beta = entity_id(hass, entry, "downloads", "v0.8.3-beta.1")
     hass.config_entries.async_update_entry(
         entry, options={"include_prereleases": False, "top_versions": 1}
     )
     await hass.async_block_till_done()
     assert entity_id(hass, entry, "installations", "0.8.3-beta.1") == beta
     assert hass.states.get(beta).state == "30"
+    assert entry.runtime_data.selected_versions["downloads"] == ["v0.8.2"]
+    assert hass.states.get(github_beta).state == "40"
+    assert hass.states.get(github_beta).attributes["in_current_selection"] is False
+
+
+async def test_new_release_joins_selection_immediately_and_old_history_keeps_its_identity(
+    hass, source_clients, releases
+):
+    entry = await setup_project(hass)
+    beta = entity_id(hass, entry, "downloads", "v0.8.3-beta.1")
+    assert hass.states.get(beta).state == "40"
+    assert hass.states.get(beta).attributes["in_current_selection"] is True
+    # Installation adoption still selects the most commonly installed version.
+    assert entry.runtime_data.selected_versions["installations"] == ["0.8.2"]
+    releases.append(
+        {
+            "id": 13,
+            "tag_name": "v0.8.3",
+            "published_at": "2026-10-20T12:00:00Z",
+            "prerelease": False,
+            "draft": False,
+            "assets": [{"id": 104, "name": "project.zip", "download_count": 0}],
+        }
+    )
+    await entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+    latest = entity_id(hass, entry, "downloads", "v0.8.3")
+    assert latest != beta
+    assert hass.states.get(latest).state == "0"
+    assert hass.states.get(latest).attributes["in_current_selection"] is True
+    assert hass.states.get(latest).attributes["published_at"] == "2026-10-20T12:00:00+00:00"
+    assert hass.states.get(beta).state == "40"
+    assert hass.states.get(beta).attributes["in_current_selection"] is False
+    assert hass.states.get(entity_id(hass, entry, "downloads")).state == "190"
+    releases[1]["assets"][0]["download_count"] = 41
+    await entry.runtime_data.async_refresh()
+    assert entity_id(hass, entry, "downloads", "v0.8.3-beta.1") == beta
+    assert hass.states.get(beta).state == "41"
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entity_id(hass, entry, "downloads", "v0.8.3") == latest
+    assert hass.states.get(latest).attributes["in_current_selection"] is True
+    assert hass.states.get(beta).state == "41"

@@ -35,13 +35,13 @@ Prüfe die vorgeschlagene Zuordnung im Bestätigungsschritt. Um ausschließlich 
 | GitHub-Repository | `SoftwareSchmied/community-stats` |
 | Installationsstatistik | Benutzerdefinierte Integration |
 | Projektname | Community Stats |
-| Anzahl neuer Top-Versionen | `10` |
+| Anzahl Versionen je Datenquelle | `10` |
 | Aktualisierungsintervall | `12` Stunden |
 | Dateien für Downloadzahlen | `community_stats.zip` |
 
 Die Domain ist der technische Name der Integration. Beim Repository funktioniert auch `https://github.com/SoftwareSchmied/community-stats`; die lokale HACS-Adresse gehört dort nicht hinein. `community_stats.zip` bezeichnet die Datei, die an den GitHub-Releases hängt.
 
-Top-Versionen und Intervall haben sichtbare, direkt bearbeitbare Zahlenfelder. Erklärungen und Beispiele stehen an den jeweiligen Feldern. Ohne GitHub-Token gilt für GitHub die gemeinsame Rotation alle 61 Minuten. Installationszahlen bleiben nicht verfügbar, bis Home Assistant Analytics diese Integration meldet.
+Versionsanzahl und Intervall haben sichtbare, direkt bearbeitbare Zahlenfelder. Erklärungen und Beispiele stehen an den jeweiligen Feldern. Ohne GitHub-Token gilt für GitHub die gemeinsame Rotation alle 61 Minuten. Installationszahlen bleiben nicht verfügbar, bis Home Assistant Analytics diese Integration meldet.
 
 ## Welche Dateien zählen?
 
@@ -65,9 +65,13 @@ Andere Dateimuster oder ein anderes Repository erzeugen neue Download-Messreihen
 
 ## Versionen und Verläufe
 
-Standardmäßig werden je Quelle die **zehn Versionen mit den höchsten Zahlen** neu erfasst; einstellbar sind 1 bis 100. Veröffentlichungsdatum und Versionsnummer bestimmen die Rangfolge nicht. Betaversionen und genaue Schreibweisen bleiben erhalten. GitHub-Tags und Integrationsversionen werden getrennt behandelt.
+Standardmäßig werden **zehn Versionen je Datenquelle** ausgewählt; einstellbar sind 1 bis 100. Für Installationszahlen sind das die häufigsten gemeldeten Versionen. Für GitHub-Downloads sind es die **zuletzt veröffentlichten Releases mit passenden Download-Dateien**. Maßgeblich ist GitHubs Veröffentlichungszeitpunkt `published_at`. Ein neues Release kann deshalb schon mit **0 Downloads** beim nächsten erfolgreichen GitHub-Abruf in die Auswahl kommen. Downloadzahl, Versionsnummer und Datum des zugrunde liegenden Commits bestimmen diese Auswahl nicht.
 
-Ein einmal erfasster Versionssensor bleibt seiner Version zugeordnet und wird auch außerhalb der Top-Auswahl weiter aktualisiert. Die Zahl der Sensoren kann deshalb langfristig über zehn steigen. Ein Neustart, eine kleinere Top-Auswahl oder das Ausschließen neuer Betaversionen beendet diese bestehenden Verläufe nicht. Nicht mehr gewünschte Sensoren lassen sich in Home Assistant deaktivieren.
+Betaversionen folgen der Einstellung für Vorabversionen. Genaue Schreibweisen bleiben erhalten; bei gleichem Veröffentlichungszeitpunkt entscheidet die genaue Tag-Zeichenfolge. GitHub-Tags und Integrationsversionen werden getrennt behandelt. Fehlt ein gültiger Veröffentlichungszeitpunkt, wird das Release nicht neu als aktuelles ausgewählt; seine gültigen Downloadzahlen bleiben in Gesamtsumme und bestehenden Sensoren nutzbar.
+
+Ein einmal erfasster Versionssensor bleibt seiner Version zugeordnet und wird auch außerhalb der aktuellen Auswahl weiter aktualisiert. Die Zahl der Sensoren kann deshalb langfristig über zehn steigen. Ein Neustart, eine kleinere Auswahl oder das Ausschließen neuer Betaversionen beendet diese bestehenden Verläufe nicht. Nicht mehr gewünschte Sensoren lassen sich in Home Assistant deaktivieren.
+
+GitHub-Versionssensoren besitzen die Attribute `in_current_selection` und `published_at`. Ein Dashboard kann mit `in_current_selection: true` nur die neuesten ausgewählten Releases anzeigen und trotzdem ältere Verläufe behalten. Die [Vorlage für den Verlauf der neuesten Releases](../examples/latest-downloads.yaml) übernimmt das automatisch. Sie benötigt zusätzlich die Dashboard-Karte Auto Entities, die separat über HACS installiert werden kann.
 
 Fehlt eine Version später in der Quelle, ist ihr Sensor nicht verfügbar. Kehrt sie zurück, wird derselbe Sensor weitergeführt. Die Installationstotalzahl wird unabhängig davon genutzt, ob für jede Version gültige Daten vorliegen. Die Summe der beobachteten Versionssensoren muss nicht der Gesamtzahl entsprechen.
 

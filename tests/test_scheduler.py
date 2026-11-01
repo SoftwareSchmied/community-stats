@@ -97,13 +97,15 @@ async def test_reload_preserves_counts_last_success_and_pause(hass, source_clien
     entry = await anonymous_project(hass)
     before = entry.runtime_data
     last_success = before.states["downloads"].last_success
-    sensor = entity_id(hass, entry, "downloads", "v0.8.2")
+    sensor = entity_id(hass, entry, "downloads", "v0.8.3-beta.1")
     await advance(hass, freezer, 6 * 60)
     assert await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.runtime_data is not before
     assert entry.runtime_data.states["downloads"].last_success == last_success
-    assert hass.states.get(sensor).state == "150"
+    assert hass.states.get(sensor).state == "40"
+    assert hass.states.get(sensor).attributes["in_current_selection"] is True
+    assert hass.states.get(sensor).attributes["published_at"] == "2026-10-10T12:00:00+00:00"
     assert hass.states.get(metric_entity(hass, entry, "stars")).state == "26"
     github.async_repository.assert_awaited_once()
     await advance(hass, freezer, 55 * 60)
@@ -253,3 +255,24 @@ async def test_analytics_interval_runs_before_github_slot(hass, source_clients, 
     await advance(hass, freezer, 59)
     assert github.async_repository.await_count == 2
     assert analytics.async_get.await_count == 2
+
+
+async def test_older_cached_counts_keep_histories_until_publication_dates_are_fetched(
+    hass, source_clients, freezer
+):
+    _, github = source_clients
+    entry = await anonymous_project(hass, top_versions=2)
+    original = entity_id(hass, entry, "downloads", "v0.8.2")
+    snapshot = await entry.runtime_data.store.async_load()
+    snapshot["github"]["downloads"].pop("published_at")
+    await entry.runtime_data.store.async_save(snapshot)
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    github.async_releases.assert_awaited_once()
+    assert hass.states.get(original).state == "150"
+    assert hass.states.get(original).attributes["published_at"] is None
+    assert entry.runtime_data.selected_versions["downloads"] == []
+    await advance(hass, freezer)
+    assert entry.runtime_data.selected_versions["downloads"] == ["v0.8.3-beta.1", "v0.8.2"]
+    assert entity_id(hass, entry, "downloads", "v0.8.2") == original
+    assert hass.states.get(original).attributes["published_at"] == "2026-10-01T12:00:00+00:00"

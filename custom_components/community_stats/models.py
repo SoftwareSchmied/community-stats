@@ -35,6 +35,7 @@ class Counts:
     total: int | None = None
     versions: dict[str, int] = field(default_factory=dict)
     prereleases: set[str] = field(default_factory=set)
+    published_at: dict[str, float] = field(default_factory=dict)
 
 
 @dataclass
@@ -132,6 +133,15 @@ def parse_downloads(releases: Any, patterns: list[str]) -> Counts:
             if tag in counts.versions:
                 raise SourceError("invalid_data")
             counts.versions[tag] = sum(matched.values())
+            published = release.get("published_at")
+            if isinstance(published, str):
+                try:
+                    published_date = datetime.fromisoformat(published)
+                except ValueError:
+                    pass
+                else:
+                    if published_date.tzinfo is not None:
+                        counts.published_at[tag] = published_date.timestamp()
             if release.get("prerelease"):
                 counts.prereleases.add(tag)
     if not counts.versions:
@@ -157,6 +167,21 @@ def top_versions(counts: Counts, limit: int, include_prereleases: bool) -> list[
             if include_prereleases or not (version in counts.prereleases or is_prerelease(version))
         ),
         key=lambda version: (-counts.versions[version], version),
+    )[:limit]
+
+
+def latest_versions(counts: Counts, limit: int, include_prereleases: bool) -> list[str]:
+    """Select published releases by date, independently of counts and API order."""
+    return sorted(
+        (
+            version
+            for version in counts.versions
+            if version in counts.published_at
+            and (
+                include_prereleases or not (version in counts.prereleases or is_prerelease(version))
+            )
+        ),
+        key=lambda version: (-counts.published_at[version], version),
     )[:limit]
 
 
