@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0
+
+- Rotate GitHub projects without a token through one shared queue, with one project every 61 minutes.
+- Keep the configured refresh interval for authenticated GitHub projects and Home Assistant Analytics.
+- Preserve queue fairness, the next permitted slot and previous GitHub observations across reloads and restarts.
+- Keep manual refreshes and rate-limit retries inside the anonymous schedule.
+- Show an explicit waiting status before a project's first GitHub observation and include scheduling details in diagnostics.
+- Cover queue timing, simultaneous refreshes, restarts, token changes, failures and cache identity with regression tests.
+
 ## 0.2.0
 
 - Add sensors for GitHub stars, forks, actual watchers, total issues and open issues.

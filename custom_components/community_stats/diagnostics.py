@@ -29,4 +29,10 @@ async def async_get_config_entry_diagnostics(
             for source, state in coordinator.states.items()
         },
         "github_remaining_at_last_response": coordinator.github.remaining,
+        "github_schedule": {
+            "mode": "round_robin" if coordinator.rotation else "configured_interval",
+            "next_slot": (
+                coordinator.rotation.scheduled_at(entry.entry_id) if coordinator.rotation else None
+            ),
+        },
     }

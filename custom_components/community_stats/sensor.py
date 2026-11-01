@@ -18,6 +18,7 @@ from .models import version_key
 STATUS_OPTIONS = [
     "ok",
     "disabled",
+    "waiting",
     "cannot_connect",
     "invalid_data",
     "not_found",

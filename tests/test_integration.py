@@ -20,6 +20,7 @@ async def setup_project(hass, **overrides):
         "top_versions": 1,
         "include_prereleases": True,
         "update_interval": 12,
+        CONF_ACCESS_TOKEN: "test-token",
     }
     data.update(overrides)
     entry = MockConfigEntry(domain=DOMAIN, title="Test project", data=data, unique_id="custom:test")

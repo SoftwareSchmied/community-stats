@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "Projekt hinzufügen",
-        "description": "Beobachte auch Projekte, die bei dir nicht installiert sind. Gib eine Domain, ein öffentliches GitHub-Repository oder beides an. Eine bekannte Zuordnung wird vorgeschlagen. Core-Integrationen haben nur Installations-Gesamtzahlen. Mit einer ausdrücklich gewählten Statistikquelle kannst du auch eine Domain einrichten, die noch nicht in Analytics vorkommt.",
+        "description": "Beobachte auch Projekte, die bei dir nicht installiert sind. Gib eine Domain, ein öffentliches GitHub-Repository oder beides an. Eine bekannte Zuordnung wird vorgeschlagen. Core-Integrationen haben nur Installations-Gesamtzahlen. Mit einer ausdrücklich gewählten Statistikquelle kannst du auch eine Domain einrichten, die noch nicht in Analytics vorkommt.\n\nOhne Token wird alle 61 Minuten das nächste GitHub-Projekt abgefragt. Mit Token gilt das eingestellte Intervall. Analytics verwendet immer das eingestellte Intervall.",
         "data": {
           "integration_domain": "Integrations-Domain",
           "repository": "GitHub-Repository",
@@ -21,7 +21,7 @@
       },
       "project": {
         "title": "Zuordnung prüfen und Sensoren einrichten",
-        "description": "Integration: {integration}\n\nStatistikquelle: {source}\n\nGitHub: {repository}\n\nDateien eines aktuellen Releases: {assets}\n\nPrüfe die vorgeschlagene Zuordnung. Dateimuster gelten für alle Releases; * zählt jede Datei, auch alternative Pakete. Versionen werden nach Anzahl ausgewählt. Bereits erfasste Versionen werden dauerhaft weitergeführt.",
+        "description": "Integration: {integration}\n\nStatistikquelle: {source}\n\nGitHub: {repository}\n\nDateien eines aktuellen Releases: {assets}\n\nPrüfe die vorgeschlagene Zuordnung. Dateimuster gelten für alle Releases; * zählt jede Datei, auch alternative Pakete. Versionen werden nach Anzahl ausgewählt. Bereits erfasste Versionen werden dauerhaft weitergeführt.\n\nOhne Token wird alle 61 Minuten das nächste GitHub-Projekt abgefragt. Mit Token gilt das eingestellte Intervall. Analytics verwendet immer das eingestellte Intervall.",
         "data": {
           "name": "Projektname",
           "top_versions": "Top-Versionen je Datenquelle neu erfassen",
@@ -55,7 +55,7 @@
     "step": {
       "init": {
         "title": "Projekteinstellungen",
-        "description": "Bereits erfasste Versionen bleiben erhalten, auch außerhalb der Top-Auswahl. Ein geändertes Repository oder andere Dateimuster erzeugen neue Download-Messreihen. Lass das Token-Feld leer, um den gespeicherten Token zu behalten. Manuelle Aktualisierungen beachten ein Zeitfenster von fünf Minuten und die GitHub-Limits.",
+        "description": "Bereits erfasste Versionen bleiben erhalten, auch außerhalb der Top-Auswahl. Ein geändertes Repository oder andere Dateimuster erzeugen neue Download-Messreihen. Lass das Token-Feld leer, um den gespeicherten Token zu behalten. Manuelle Aktualisierungen beachten den Fünf-Minuten-Cache, die Warteschlange und die GitHub-Limits.\n\nOhne Token wird alle 61 Minuten das nächste GitHub-Projekt abgefragt. Mit Token gilt das eingestellte Intervall. Analytics verwendet immer das eingestellte Intervall.",
         "data": {
           "top_versions": "Top-Versionen je Datenquelle neu erfassen",
           "include_prereleases": "Vorabversionen bei der Auswahl neuer Top-Versionen berücksichtigen",
@@ -125,7 +125,8 @@
           "invalid_auth": "Ungültiger GitHub-Token",
           "access_denied": "Zugriff verweigert",
           "no_matching_assets": "Keine passenden Release-Dateien",
-          "repository_moved": "Repository verschoben"
+          "repository_moved": "Repository verschoben",
+          "waiting": "Wartet auf ersten GitHub-Abruf"
         }
       },
       "downloads_status": {
@@ -140,7 +141,8 @@
           "invalid_auth": "Ungültiger GitHub-Token",
           "access_denied": "Zugriff verweigert",
           "no_matching_assets": "Keine passenden Release-Dateien",
-          "repository_moved": "Repository verschoben"
+          "repository_moved": "Repository verschoben",
+          "waiting": "Wartet auf ersten GitHub-Abruf"
         }
       },
       "installations_last_success": {
@@ -175,7 +177,8 @@
           "invalid_auth": "Ungültiger GitHub-Token",
           "access_denied": "Zugriff verweigert",
           "no_matching_assets": "Keine passenden Release-Dateien",
-          "repository_moved": "Repository verschoben"
+          "repository_moved": "Repository verschoben",
+          "waiting": "Wartet auf ersten GitHub-Abruf"
         },
         "name": "GitHub-Issue-Status"
       },
@@ -190,7 +193,8 @@
           "invalid_auth": "Ungültiger GitHub-Token",
           "access_denied": "Zugriff verweigert",
           "no_matching_assets": "Keine passenden Release-Dateien",
-          "repository_moved": "Repository verschoben"
+          "repository_moved": "Repository verschoben",
+          "waiting": "Wartet auf ersten GitHub-Abruf"
         },
         "name": "GitHub-Repository-Status"
       },

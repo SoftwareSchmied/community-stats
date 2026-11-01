@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "Add a project",
-        "description": "Monitor projects even when they are not installed locally. Enter a domain, a public GitHub repository, or both. Known mappings are suggested. Core integrations only have installation totals. Select a source explicitly to add a domain that is not yet present in Analytics.",
+        "description": "Monitor projects even when they are not installed locally. Enter a domain, a public GitHub repository, or both. Known mappings are suggested. Core integrations only have installation totals. Select a source explicitly to add a domain that is not yet present in Analytics.\n\nWithout a token, the next GitHub project is updated every 61 minutes. With a token, GitHub uses the configured interval. Analytics always uses the configured interval.",
         "data": {
           "integration_domain": "Integration domain",
           "repository": "GitHub repository",
@@ -21,7 +21,7 @@
       },
       "project": {
         "title": "Review sources and configure sensors",
-        "description": "Integration: {integration}\n\nAnalytics source: {source}\n\nGitHub: {repository}\n\nFiles from a recent release: {assets}\n\nReview the suggested mapping. Filename patterns apply to all releases; * counts every file, including alternative packages. Versions are selected by count. Previously tracked versions continue to be updated permanently.",
+        "description": "Integration: {integration}\n\nAnalytics source: {source}\n\nGitHub: {repository}\n\nFiles from a recent release: {assets}\n\nReview the suggested mapping. Filename patterns apply to all releases; * counts every file, including alternative packages. Versions are selected by count. Previously tracked versions continue to be updated permanently.\n\nWithout a token, the next GitHub project is updated every 61 minutes. With a token, GitHub uses the configured interval. Analytics always uses the configured interval.",
         "data": {
           "name": "Project name",
           "top_versions": "Top versions to discover per source",
@@ -55,7 +55,7 @@
     "step": {
       "init": {
         "title": "Project settings",
-        "description": "Previously tracked versions are retained even outside the top selection. Changing the repository or filename patterns starts new download series. Leave the token blank to keep the saved token. Manual refresh respects a five-minute cache window and GitHub limits.",
+        "description": "Previously tracked versions are retained even outside the top selection. Changing the repository or filename patterns starts new download series. Leave the token blank to keep the saved token. Manual refresh respects the five-minute cache, the queue and GitHub limits.\n\nWithout a token, the next GitHub project is updated every 61 minutes. With a token, GitHub uses the configured interval. Analytics always uses the configured interval.",
         "data": {
           "top_versions": "Top versions to discover per source",
           "include_prereleases": "Include prereleases in new top-version selections",
@@ -125,7 +125,8 @@
           "invalid_auth": "Invalid GitHub token",
           "access_denied": "Access denied",
           "no_matching_assets": "No matching release files",
-          "repository_moved": "Repository moved"
+          "repository_moved": "Repository moved",
+          "waiting": "Waiting for first GitHub update"
         }
       },
       "downloads_status": {
@@ -140,7 +141,8 @@
           "invalid_auth": "Invalid GitHub token",
           "access_denied": "Access denied",
           "no_matching_assets": "No matching release files",
-          "repository_moved": "Repository moved"
+          "repository_moved": "Repository moved",
+          "waiting": "Waiting for first GitHub update"
         }
       },
       "installations_last_success": {
@@ -175,7 +177,8 @@
           "invalid_auth": "Invalid GitHub token",
           "access_denied": "Access denied",
           "no_matching_assets": "No matching release files",
-          "repository_moved": "Repository moved"
+          "repository_moved": "Repository moved",
+          "waiting": "Waiting for first GitHub update"
         },
         "name": "GitHub issue status"
       },
@@ -190,7 +193,8 @@
           "invalid_auth": "Invalid GitHub token",
           "access_denied": "Access denied",
           "no_matching_assets": "No matching release files",
-          "repository_moved": "Repository moved"
+          "repository_moved": "Repository moved",
+          "waiting": "Waiting for first GitHub update"
         },
         "name": "GitHub repository status"
       },

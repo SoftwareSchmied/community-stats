@@ -14,6 +14,7 @@ CONF_INTERVAL = "update_interval"
 DEFAULT_TOP = 10
 DEFAULT_INTERVAL = 12
 MIN_REFRESH_SECONDS = 300
+GITHUB_ROTATION_SECONDS = 61 * 60
 CUSTOM_URL = "https://analytics.home-assistant.io/custom_integrations.json"
 CORE_URL = "https://analytics.home-assistant.io/current_data.json"
 GITHUB_API = "https://api.github.com"

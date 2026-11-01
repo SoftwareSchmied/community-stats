@@ -96,17 +96,22 @@ Downloads count requests, not users or active installations. Repeated downloads 
 
 ## Updates and GitHub limits
 
-- Default refresh: every **12 hours**, configurable from 1 to 168 hours per project.
-- Use the device's **Refresh** button or Home Assistant's `homeassistant.update_entity` action for a manual update. Recent successful data is shared for **five minutes**; repeated clicks do not bypass this cache or GitHub's quota.
+- **Without a GitHub token:** all anonymous projects in this Home Assistant instance share a round-robin queue. One project's GitHub statistics are fetched every **61 minutes**. With ten projects, each is refreshed about every **10 hours 10 minutes**. The first project can start immediately when no previous pause is active; additional projects wait their turn. This schedule replaces the configured interval for anonymous GitHub statistics.
+- **With a GitHub token:** GitHub uses the project's configured interval, default **12 hours**, configurable from 1 to 168 hours. Token-based projects are independent of the anonymous queue. An invalid token reports an authentication error; it does not switch to anonymous access automatically.
+- **Home Assistant Analytics** always uses the configured interval, independently of GitHub's queue.
+- Use the device's **Refresh** button or Home Assistant's `homeassistant.update_entity` action for a manual update. Recent successful data is shared for **five minutes**; repeated clicks do not bypass this cache, the anonymous queue or GitHub's quota.
+- Queue order, the next permitted slot and the latest GitHub observations survive reloads and restarts. Waiting keeps the previous observation and its original last-success timestamp. Before the first observation, the affected sensors are unavailable and source status shows **Waiting for first GitHub update**. A failed request makes that source unavailable until a successful turn; other sources remain independent. A restart never triggers a burst of missed updates.
 - Analytics documents, repository metadata, issue searches and GitHub release scans are shared between projects using the same source and credential. One API page can contain up to 100 releases and feeds many sensors.
 - A repository with one page of releases normally uses **four GitHub requests per refresh**: one for repository metadata, two for issue counts and one for releases. Without download sensors, it uses three. Setup discovery and additional release pages can require more requests.
-- All pages must be fetched before a complete download total is published. A scan interrupted by a rate limit resumes when the limit permits; no partial total is exposed. A scan older than 24 hours starts again.
+- All pages must be fetched before a complete download total is published. A scan interrupted by a rate limit resumes when the limit permits; without a token it also waits for that project's next turn. No partial total is exposed. A scan older than 24 hours starts again.
 - GitHub normally permits **60 unauthenticated REST requests per hour per public IP**, or **5,000 authenticated requests per hour per account**. Other applications can share those quotas. Community Stats uses a local ceiling of 50 or 4,500 requests respectively and also honors GitHub's remaining quota, reset time and retry headers.
 - A GitHub token is optional. Use a token with only the access needed to read public repositories; no write permissions are required. Configure it per project. Entries using the same token share a client. Changing or removing it is available in **Configure**.
 - Issue searches have a separate quota. Community Stats tracks its reset time separately, so a search-only limit does not block other repository data. Large collections may need several quota windows; the integration resumes automatically.
 - Conditional requests reuse unchanged data. GitHub exempts authenticated `304 Not Modified` responses from its primary quota; do not assume that every request receives a 304.
 
-Analytics, release downloads, repository metadata and issue-search availability are tracked independently. Source status and last-successful-update sensors explain missing data. The GitHub retry-time sensor indicates the next scheduled rate-limit retry. A remaining-request diagnostic sensor is disabled by default; its value is the last observed standard REST quota, not an independently reserved allowance or the search quota.
+Analytics, release downloads, repository metadata and issue-search availability are tracked independently. Source status and last-successful-update sensors explain missing data. The GitHub retry-time sensor indicates the earliest rate-limit retry; an anonymous project's turn may be later. Downloadable diagnostics include the scheduling mode and an estimate of that project's next queue slot. Setup discovery uses separate requests subject to the same API limits; the rotation governs sensor updates. Other Home Assistant instances and applications on the same public IP do not share this queue.
+
+A remaining-request diagnostic sensor is disabled by default; its value is the last observed standard REST quota, not an independently reserved allowance or the search quota.
 
 ## Data sources and privacy
 

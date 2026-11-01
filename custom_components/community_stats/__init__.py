@@ -19,11 +19,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: CommunityStatsEntry) -> 
             data={key: value for key, value in entry.data.items() if key != CONF_ACCESS_TOKEN},
         )
     coordinator = CommunityStatsCoordinator(hass, entry)
+    entry.async_on_unload(coordinator.cancel_retry)
     await coordinator.async_load_tracking()
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
-    entry.async_on_unload(coordinator.cancel_retry)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 

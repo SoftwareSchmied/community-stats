@@ -1,11 +1,11 @@
-# Validation of 0.2.0
+# Validation of 0.3.0
 
 Validated on 1 November 2026 with Home Assistant 2026.10.4 and Python 3.14.7 on Linux.
 
 | Check | Result |
 | --- | --- |
-| Automated suite | 88 tests pass with external sockets disabled |
-| Coverage including branches | 91.04% |
+| Automated suite | 102 tests pass with external sockets disabled |
+| Coverage including branches | 91.91% |
 | Ruff lint and formatting | Pass |
 | Hassfest | No invalid integrations |
 | Real Recorder statistics | Hourly min/max/mean for falling installation counts match the input data; no counter-reset sum |
@@ -14,6 +14,8 @@ Validated on 1 November 2026 with Home Assistant 2026.10.4 and Python 3.14.7 on 
 | Public source requests | Custom integration, core integration, release downloads and repository metrics return numeric values |
 
 The automated tests cover exact version identities, rank changes, missing and returning versions, zero and decreasing counts, option reloads, token removal and migration, pagination, incomplete search results, independent search limits, retry scheduling and shared manual-refresh caching.
+
+Fourteen queue regression cases cover the shared 61-minute rotation, waiting states, independent Analytics intervals, normal authenticated refreshes, manual actions, restored observations, restart ordering, token changes, rate-limit recovery, changed source identities, unloaded projects and concurrent refreshes. Tests advance Home Assistant timers to verify the schedule without waiting in real time.
 
 GitHub metrics distinguish actual subscribers from stars, and issue searches exclude pull requests. Changing release filename filters preserves repository-metric histories. Empty filename patterns permit repository statistics without download sensors.
 

@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util import dt as dt_util
 
 from .api import get_analytics, get_github
 from .const import (
@@ -27,6 +28,7 @@ from .const import (
     DOMAIN,
 )
 from .models import (
+    Counts,
     SourceError,
     SourceState,
     parse_analytics,
@@ -36,6 +38,7 @@ from .models import (
     top_versions,
     version_key,
 )
+from .scheduler import get_rotation
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,6 +54,12 @@ class CommunityStatsCoordinator(DataUpdateCoordinator[dict[str, SourceState]]):
         self.analytics_source = self.settings.get(CONF_SOURCE, "custom")
         self.patterns = parse_patterns(self.settings.get(CONF_PATTERNS, ""))
         self.github = get_github(hass, self.settings.get(CONF_ACCESS_TOKEN, ""))
+        self.rotation = (
+            get_rotation(hass)
+            if self.repository and not self.settings.get(CONF_ACCESS_TOKEN)
+            else None
+        )
+        self._update_lock = asyncio.Lock()
         self.analytics = get_analytics(hass)
         self.states = {
             source: SourceState()
@@ -80,6 +89,55 @@ class CommunityStatsCoordinator(DataUpdateCoordinator[dict[str, SourceState]]):
                 for key, values in stored.items()
                 if isinstance(values, list)
             }
+            self._restore_github(stored.get("github", {}))
+        if self.rotation:
+            await self.rotation.async_register(self)
+
+    def _github_scope(self, source: str) -> str:
+        return (
+            self.scopes["downloads"]
+            if source == "downloads"
+            else version_key(self.repository.lower())
+        )
+
+    def _restore_github(self, stored: dict) -> None:
+        """Keep the last observation visible while waiting, without changing its age."""
+        for source in ("downloads", "repository", "issues"):
+            cached = stored.get(source)
+            if (
+                not self.enabled(source)
+                or not isinstance(cached, dict)
+                or cached.get("scope") != self._github_scope(source)
+            ):
+                continue
+            state = self.states[source]
+            state.counts = Counts(
+                total=cached["total"],
+                versions=cached["versions"],
+                prereleases=set(cached["prereleases"]),
+            )
+            state.metrics = cached["metrics"]
+            state.status = cached["status"]
+            state.retry_at = cached["retry_at"]
+            if cached["last_success"]:
+                state.last_success = dt_util.parse_datetime(cached["last_success"])
+
+    async def _async_save(self) -> None:
+        """Persist selected versions and GitHub observations without credentials."""
+        github = {}
+        for source in ("downloads", "repository", "issues"):
+            state = self.states[source]
+            github[source] = {
+                "scope": self._github_scope(source),
+                "total": state.counts.total,
+                "versions": state.counts.versions,
+                "prereleases": sorted(state.counts.prereleases),
+                "metrics": state.metrics,
+                "status": state.status,
+                "retry_at": state.retry_at,
+                "last_success": state.last_success.isoformat() if state.last_success else None,
+            }
+        await self.store.async_save({**self.tracked, "github": github})
 
     def known_versions(self, source: str) -> list[str]:
         """Return the versions belonging to this source and selection of files."""
@@ -120,7 +178,25 @@ class CommunityStatsCoordinator(DataUpdateCoordinator[dict[str, SourceState]]):
             state.retry_at = err.retry_at
 
     async def _async_update_data(self) -> dict[str, SourceState]:
-        await asyncio.gather(*(self._async_update_source(source) for source in self.states))
+        async with self._update_lock:
+            return await self._async_update()
+
+    async def async_refresh_github(self) -> None:
+        """A rotation turn leaves the separate Analytics polling schedule intact."""
+        async with self._update_lock:
+            await self._async_update(github_only=True)
+            self.async_update_listeners()
+
+    async def _async_update(self, *, github_only: bool = False) -> dict[str, SourceState]:
+        update_github = not self.rotation or await self.rotation.async_claim(self)
+        sources = [] if github_only else ["installations"]
+        if update_github:
+            sources.extend(("downloads", "repository", "issues"))
+        else:
+            for source in ("downloads", "repository", "issues"):
+                if self.enabled(source) and self.states[source].status == "disabled":
+                    self.states[source].status = "waiting"
+        await asyncio.gather(*(self._async_update_source(source) for source in sources))
         changed = False
         for source in ("installations", "downloads"):
             state = self.states[source]
@@ -136,12 +212,16 @@ class CommunityStatsCoordinator(DataUpdateCoordinator[dict[str, SourceState]]):
             if combined != previous:
                 self.tracked[self.scopes[source]] = combined
                 changed = True
-        if changed:
-            await self.store.async_save(self.tracked)
+        if changed or (update_github and self.repository):
+            await self._async_save()
         if self._cancel_retry:
             self._cancel_retry()
             self._cancel_retry = None
-        retry_times = [s.retry_at for s in self.states.values() if s.retry_at]
+        retry_times = [
+            state.retry_at
+            for source, state in self.states.items()
+            if state.retry_at and (not self.rotation or source == "installations")
+        ]
         if retry_times:
             self._cancel_retry = async_call_later(
                 self.hass, max(60, min(retry_times) - time.time()), self._async_retry
@@ -158,3 +238,5 @@ class CommunityStatsCoordinator(DataUpdateCoordinator[dict[str, SourceState]]):
         if self._cancel_retry:
             self._cancel_retry()
             self._cancel_retry = None
+        if self.rotation:
+            self.rotation.unregister(self)
