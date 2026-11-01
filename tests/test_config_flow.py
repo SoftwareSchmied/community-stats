@@ -10,6 +10,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.community_stats.const import DOMAIN
+from custom_components.community_stats.models import SourceError
 
 
 async def start(hass, user_input):
@@ -43,10 +44,12 @@ async def test_domain_only_setup(hass, source_clients):
             "discover_repository": False,
         },
     )
-    result = await finish(hass, result)
+    result = await finish(hass, result, top_versions=10.0, update_interval=12.0)
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"]["integration_domain"] == "test_project"
     assert not result["data"]["repository"]
+    assert type(result["data"]["top_versions"]) is int
+    assert type(result["data"]["update_interval"]) is int
 
 
 async def test_local_manifest_suggests_repository(hass, source_clients, releases):
@@ -54,6 +57,7 @@ async def test_local_manifest_suggests_repository(hass, source_clients, releases
     github.async_json.side_effect = [
         {"full_name": "owner/repo", "private": False},
         releases,
+        SourceError("not_found"),
     ]
     local = Mock(name="integration", is_built_in=False)
     local.name = "Example integration"
@@ -86,6 +90,7 @@ async def test_repository_resolves_manifest_domain(hass, source_clients, release
         [{"type": "dir", "name": "test_project"}],
         {"content": manifest.decode()},
         releases,
+        SourceError("not_found"),
     ]
     with patch("custom_components.community_stats.config_flow.get_github", return_value=github):
         result = await start(hass, {"repository": "https://github.com/owner/repo"})
@@ -102,6 +107,7 @@ async def test_card_without_manifest_is_downloads_only(hass, source_clients, rel
         {"full_name": "owner/card", "private": False},
         SourceError("not_found"),
         releases,
+        SourceError("not_found"),
     ]
     with patch("custom_components.community_stats.config_flow.get_github", return_value=github):
         result = await start(hass, {"repository": "owner/card"})
@@ -116,6 +122,7 @@ async def test_ambiguous_repository_offers_domain_choice(hass, source_clients, r
         {"full_name": "owner/repo", "private": False},
         [{"type": "dir", "name": "first"}, {"type": "dir", "name": "second"}],
         releases,
+        SourceError("not_found"),
     ]
     with patch("custom_components.community_stats.config_flow.get_github", return_value=github):
         result = await start(hass, {"repository": "owner/repo"})
@@ -176,9 +183,9 @@ async def test_options_keep_secret_without_showing_it(hass):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {
-            "top_versions": 5,
+            "top_versions": 5.0,
             "include_prereleases": False,
-            "update_interval": 24,
+            "update_interval": 24.0,
             "repository": "",
             "asset_patterns": "",
             "clear_token": False,
@@ -186,6 +193,8 @@ async def test_options_keep_secret_without_showing_it(hass):
     )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert entry.options[CONF_ACCESS_TOKEN] == "secret-value"
+    assert type(entry.options["top_versions"]) is int
+    assert type(entry.options["update_interval"]) is int
 
 
 async def test_options_can_remove_saved_secret(hass):
@@ -321,3 +330,66 @@ async def test_invalid_core_feed_structure_is_a_form_error(hass):
     ):
         result = await start(hass, {"integration_domain": "example", "analytics_source": "auto"})
     assert result["errors"] == {"base": "invalid_data"}
+
+
+def content_file(document):
+    return {"content": base64.b64encode(json.dumps(document).encode()).decode()}
+
+
+@pytest.mark.parametrize(
+    "metadata,expected",
+    [
+        (content_file({"filename": "community_stats.zip"}), "community_stats.zip"),
+        (content_file({"filename": "missing.zip"}), ""),
+        (content_file({}), ""),
+        (content_file([]), ""),
+        ({"content": "malformed"}, ""),
+        (SourceError("rate_limited"), ""),
+    ],
+)
+async def test_hacs_filename_suggestion_requires_a_real_release_asset(
+    hass, source_clients, metadata, expected
+):
+    github = AsyncMock()
+    github.async_json.side_effect = [
+        {"full_name": "SoftwareSchmied/community-stats", "private": False},
+        [{"assets": [{"name": "community_stats.zip"}, {"name": "checksums.txt"}]}],
+        metadata,
+    ]
+    with patch("custom_components.community_stats.config_flow.get_github", return_value=github):
+        result = await start(
+            hass,
+            {
+                "integration_domain": "community_stats",
+                "analytics_source": "custom",
+                "repository": "SoftwareSchmied/community-stats",
+            },
+        )
+        defaults = {str(key): key.default() for key in result["data_schema"].schema}
+        assert defaults["asset_patterns"] == expected
+        github.async_json.assert_awaited_with(
+            "/repos/SoftwareSchmied/community-stats/contents/hacs.json"
+        )
+        # The user can replace any automatic proposal, including with an empty value.
+        result = await finish(hass, result, asset_patterns="")
+    assert result["data"]["asset_patterns"] == ""
+
+
+async def test_one_release_file_is_suggested_without_an_extra_request(hass, source_clients):
+    github = AsyncMock()
+    github.async_json.side_effect = [
+        {"full_name": "SoftwareSchmied/community-stats", "private": False},
+        [{"assets": [{"name": "community_stats.zip"}]}],
+    ]
+    with patch("custom_components.community_stats.config_flow.get_github", return_value=github):
+        result = await start(
+            hass,
+            {
+                "integration_domain": "community_stats",
+                "analytics_source": "custom",
+                "repository": "SoftwareSchmied/community-stats",
+            },
+        )
+        result = await finish(hass, result)
+    assert result["data"]["asset_patterns"] == "community_stats.zip"
+    assert github.async_json.await_count == 2

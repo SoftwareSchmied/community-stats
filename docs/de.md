@@ -19,13 +19,29 @@ Alternativ das Release-Archiv `community_stats.zip` nach `config/custom_componen
 
 Für jedes Projekt einen Eintrag hinzufügen. Die beobachteten Projekte müssen nicht bei dir installiert sein.
 
-- **Custom-Integration:** Domain eingeben, zum Beispiel `bosch_buderus_heating`. Sie erhält Gesamtzahlen und genaue Versionszahlen, sofern Analytics diese meldet.
+- **Custom-Integration:** Domain eingeben, zum Beispiel `community_stats`. Sie erhält Gesamtzahlen und genaue Versionszahlen, sofern Analytics diese meldet.
 - **Core-Integration:** Beispielsweise `mqtt` auswählen beziehungsweise als Domain eingeben. Sie erhält die Gesamtzahl meldender Installationen. Eine Versionsverteilung pro Core-Integration existiert in dieser Quelle nicht.
-- **Dashboard-Karte oder Theme:** GitHub-Repository angeben, etwa `Sturmi77/heatpump-hydraulic-card`. Es entstehen Downloadsensoren, sofern passende Release-Dateien existieren.
+- **Dashboard-Karte oder Theme:** Das öffentliche GitHub-Repository angeben und die Integrations-Domain leer lassen. Es entstehen Downloadsensoren, sofern passende Release-Dateien existieren.
 
 Bei lokal installierten Custom-Integrationen kann das Repository aus dem Integrationsmanifest vorgeschlagen werden. Eine vollständige Domain-zu-Repository-Liste liefert Analytics nicht. In Gegenrichtung liest Community Stats das Manifest im GitHub-Repository aus. Bei mehreren Integrationen erscheint eine Auswahl. Du kannst Domain und Repository auch beide ausdrücklich angeben.
 
 Prüfe die vorgeschlagene Zuordnung im Bestätigungsschritt. Um ausschließlich Installationen zu beobachten, den Repository-Vorschlag ausschalten und das Repository-Feld leer lassen. Die automatische Statistik-Erkennung bevorzugt Custom-Daten; bei einer Domain, die zugleich im Core vorkommt, die gewünschte Quelle ausdrücklich auswählen. Mit einer ausdrücklich gewählten Quelle lassen sich auch noch nicht gemeldete Domains vormerken; ihre Sensoren bleiben zunächst nicht verfügbar.
+
+### Beispiel: Community Stats selbst beobachten
+
+| Feld | Beispielwert |
+| --- | --- |
+| Integrations-Domain | `community_stats` |
+| GitHub-Repository | `SoftwareSchmied/community-stats` |
+| Installationsstatistik | Benutzerdefinierte Integration |
+| Projektname | Community Stats |
+| Anzahl neuer Top-Versionen | `10` |
+| Aktualisierungsintervall | `12` Stunden |
+| Dateien für Downloadzahlen | `community_stats.zip` |
+
+Die Domain ist der technische Name der Integration. Beim Repository funktioniert auch `https://github.com/SoftwareSchmied/community-stats`; die lokale HACS-Adresse gehört dort nicht hinein. `community_stats.zip` bezeichnet die Datei, die an den GitHub-Releases hängt.
+
+Top-Versionen und Intervall haben sichtbare, direkt bearbeitbare Zahlenfelder. Erklärungen und Beispiele stehen an den jeweiligen Feldern. Ohne GitHub-Token gilt für GitHub die gemeinsame Rotation alle 61 Minuten. Installationszahlen bleiben nicht verfügbar, bis Home Assistant Analytics diese Integration meldet.
 
 ## Welche Dateien zählen?
 
@@ -36,10 +52,12 @@ GitHub zählt Abrufe der **an Releases angehängten Dateien**. Quellcodearchive,
 Pro Zeile einen genauen Dateinamen oder ein Muster angeben, etwa:
 
 ```text
-heatpump-hydraulic-card.js
+community_stats.zip
 ```
 
 `*.zip` erfasst passende ZIP-Dateien. `*` würde sämtliche Dateien einschließlich alternativer Pakete und Prüfsummen erfassen. Überlappende Muster zählen dieselbe Datei nur einmal. Eine einzelne Datei wird automatisch vorgeschlagen, wenn ein aktuelles Release genau eine Datei anbietet.
+
+GitHub schreibt keinen einheitlichen Dateinamen vor. Bei mehreren Release-Dateien prüft Community Stats zusätzlich die `hacs.json` des Projekts. Der dort angegebene `filename` wird nur vorgeschlagen, wenn diese Datei unter den angezeigten Release-Dateien vorhanden ist. Bleibt die Auswahl unklar, bleibt das Feld leer. Vorschläge kannst du bearbeiten oder entfernen. Die optionale Prüfung benötigt höchstens eine zusätzliche Abfrage bei der Einrichtung, keine regelmäßigen Abfragen.
 
 Es gibt einen Downloadsensor pro ausgewähltem Release sowie eine Gesamtsumme über passende Dateien aller aktuell verfügbaren veröffentlichten Releases. Vorabversionen sind in der Gesamtsumme enthalten, Entwürfe nicht. Fehlende passende Dateien bedeuten **nicht verfügbar**, ein gemeldeter Zählerstand von null bedeutet **0**.
 

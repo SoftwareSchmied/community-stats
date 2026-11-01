@@ -4,13 +4,20 @@
     "step": {
       "user": {
         "title": "Add a project",
-        "description": "Monitor projects even when they are not installed locally. Enter a domain, a public GitHub repository, or both. Known mappings are suggested. Core integrations only have installation totals. Select a source explicitly to add a domain that is not yet present in Analytics.\n\nWithout a token, the next GitHub project is updated every 61 minutes. With a token, GitHub uses the configured interval. Analytics always uses the configured interval.",
+        "description": "Monitor a project using its integration domain, its public GitHub repository, or both. The examples use Community Stats itself. The monitored project does not have to be installed locally.",
         "data": {
           "integration_domain": "Integration domain",
           "repository": "GitHub repository",
           "analytics_source": "Installation statistics",
           "discover_repository": "Suggest a GitHub repository from the installed integration",
           "access_token": "GitHub token (optional)"
+        },
+        "data_description": {
+          "integration_domain": "Example: community_stats. Use the integration’s technical name, not its display name “Community Stats”. Leave empty for a dashboard card or GitHub statistics only.",
+          "repository": "Example: SoftwareSchmied/community-stats or {repository_example_url}. Use the project’s GitHub address, not a local HACS address. Leave empty for installation statistics only.",
+          "analytics_source": "For Community Stats: Custom integration or Detect automatically. Core integrations provide totals without their own version distribution. Selecting a source explicitly also allows domains that are not yet reported.",
+          "discover_repository": "Suggest the repository of a locally installed integration. Review the mapping in the next step.",
+          "access_token": "Optional; public projects need no write permissions. Without a token, projects share a queue: the next one runs every 61 minutes. With a token, the configured interval applies."
         }
       },
       "integration": {
@@ -21,13 +28,20 @@
       },
       "project": {
         "title": "Review sources and configure sensors",
-        "description": "Integration: {integration}\n\nAnalytics source: {source}\n\nGitHub: {repository}\n\nFiles from a recent release: {assets}\n\nReview the suggested mapping. Filename patterns apply to all releases; * counts every file, including alternative packages. Versions are selected by count. Previously tracked versions continue to be updated permanently.\n\nWithout a token, the next GitHub project is updated every 61 minutes. With a token, GitHub uses the configured interval. Analytics always uses the configured interval.",
+        "description": "Integration: {integration}\n\nAnalytics source: {source}\n\nGitHub: {repository}\n\nFiles from a recent release: {assets}\n\nReview the mapping. Matching download files are counted across all published releases.",
         "data": {
           "name": "Project name",
-          "top_versions": "Top versions to discover per source",
+          "top_versions": "Number of top versions to discover per source",
           "include_prereleases": "Include prereleases in new top-version selections",
-          "update_interval": "Update interval (hours)",
-          "asset_patterns": "Download filename patterns (empty: no downloads)"
+          "update_interval": "Update interval",
+          "asset_patterns": "Files for download counts"
+        },
+        "data_description": {
+          "name": "Choose a device name, for example Community Stats.",
+          "top_versions": "Example: 10 discovers the ten versions with the highest installation or download counts. Range: 1–100. Previously tracked versions continue to update.",
+          "include_prereleases": "Include beta versions when selecting new top versions. Previously tracked versions and totals are unaffected.",
+          "update_interval": "Example: 12 means every twelve hours. Range: 1–168 hours. Applies to Analytics and GitHub with a token. Without a token, the next GitHub project is updated every 61 minutes.",
+          "asset_patterns": "Community Stats example: community_stats.zip. This is the name of a file attached to GitHub releases. *.zip counts all ZIP files. Enter one filename or pattern per line. Empty: no download sensors; stars, forks, watchers and issues remain active."
         }
       }
     },
@@ -55,15 +69,24 @@
     "step": {
       "init": {
         "title": "Project settings",
-        "description": "Previously tracked versions are retained even outside the top selection. Changing the repository or filename patterns starts new download series. Leave the token blank to keep the saved token. Manual refresh respects the five-minute cache, the queue and GitHub limits.\n\nWithout a token, the next GitHub project is updated every 61 minutes. With a token, GitHub uses the configured interval. Analytics always uses the configured interval.",
+        "description": "Change the selection and updates for your project. Previously tracked version sensors are retained. Changing the repository or filename patterns starts new download series.",
         "data": {
-          "top_versions": "Top versions to discover per source",
+          "top_versions": "Number of top versions to discover per source",
           "include_prereleases": "Include prereleases in new top-version selections",
-          "update_interval": "Update interval (hours)",
+          "update_interval": "Update interval",
           "repository": "GitHub repository",
-          "asset_patterns": "Download filename patterns (empty: no downloads)",
+          "asset_patterns": "Files for download counts",
           "access_token": "GitHub token (optional)",
           "clear_token": "Remove the saved GitHub token"
+        },
+        "data_description": {
+          "repository": "Example: SoftwareSchmied/community-stats or {repository_example_url}. Use the project’s GitHub address, not a local HACS address. Leave empty for installation statistics only.",
+          "top_versions": "Example: 10 discovers the ten versions with the highest installation or download counts. Range: 1–100. Previously tracked versions continue to update.",
+          "include_prereleases": "Include beta versions when selecting new top versions. Previously tracked versions and totals are unaffected.",
+          "update_interval": "Example: 12 means every twelve hours. Range: 1–168 hours. Applies to Analytics and GitHub with a token. Without a token, the next GitHub project is updated every 61 minutes.",
+          "asset_patterns": "Community Stats example: community_stats.zip. This is the name of a file attached to GitHub releases. *.zip counts all ZIP files. Enter one filename or pattern per line. Empty: no download sensors; stars, forks, watchers and issues remain active.",
+          "access_token": "Leave empty to keep the saved token. Enter a new token here; use the option below to remove it. Manual updates respect the five-minute cache, the queue and GitHub limits.",
+          "clear_token": "Remove this project’s token. Its GitHub requests switch to the shared queue."
         }
       }
     },

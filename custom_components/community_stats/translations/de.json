@@ -4,13 +4,20 @@
     "step": {
       "user": {
         "title": "Projekt hinzufügen",
-        "description": "Beobachte auch Projekte, die bei dir nicht installiert sind. Gib eine Domain, ein öffentliches GitHub-Repository oder beides an. Eine bekannte Zuordnung wird vorgeschlagen. Core-Integrationen haben nur Installations-Gesamtzahlen. Mit einer ausdrücklich gewählten Statistikquelle kannst du auch eine Domain einrichten, die noch nicht in Analytics vorkommt.\n\nOhne Token wird alle 61 Minuten das nächste GitHub-Projekt abgefragt. Mit Token gilt das eingestellte Intervall. Analytics verwendet immer das eingestellte Intervall.",
+        "description": "Beobachte ein Projekt über seine Integrations-Domain, sein öffentliches GitHub-Repository oder beides. Die Beispiele zeigen Community Stats selbst. Das beobachtete Projekt muss nicht lokal installiert sein.",
         "data": {
           "integration_domain": "Integrations-Domain",
           "repository": "GitHub-Repository",
           "analytics_source": "Installationsstatistik",
           "discover_repository": "GitHub-Repository aus der installierten Integration vorschlagen",
           "access_token": "GitHub-Token (optional)"
+        },
+        "data_description": {
+          "integration_domain": "Beispiel: community_stats. Gemeint ist der technische Name der Integration, nicht der Anzeigename „Community Stats“. Für eine Dashboard-Karte oder reine GitHub-Statistiken leer lassen.",
+          "repository": "Beispiel: SoftwareSchmied/community-stats oder {repository_example_url}. Verwende die GitHub-Adresse des Projekts, keine lokale HACS-Adresse. Für reine Installationszahlen leer lassen.",
+          "analytics_source": "Für Community Stats: Benutzerdefinierte Integration oder Automatisch erkennen. Core-Integrationen liefern nur Gesamtzahlen ohne eigene Versionsverteilung. Eine ausdrücklich gewählte Quelle erlaubt auch noch nicht gemeldete Domains.",
+          "discover_repository": "Schlägt das Repository einer lokal installierten Integration vor. Prüfe die Zuordnung im nächsten Schritt.",
+          "access_token": "Optional; für öffentliche Projekte sind keine Schreibrechte nötig. Ohne Token teilen sich die Projekte eine Warteschlange: alle 61 Minuten ist das nächste dran. Mit Token gilt das eingestellte Intervall."
         }
       },
       "integration": {
@@ -21,13 +28,20 @@
       },
       "project": {
         "title": "Zuordnung prüfen und Sensoren einrichten",
-        "description": "Integration: {integration}\n\nStatistikquelle: {source}\n\nGitHub: {repository}\n\nDateien eines aktuellen Releases: {assets}\n\nPrüfe die vorgeschlagene Zuordnung. Dateimuster gelten für alle Releases; * zählt jede Datei, auch alternative Pakete. Versionen werden nach Anzahl ausgewählt. Bereits erfasste Versionen werden dauerhaft weitergeführt.\n\nOhne Token wird alle 61 Minuten das nächste GitHub-Projekt abgefragt. Mit Token gilt das eingestellte Intervall. Analytics verwendet immer das eingestellte Intervall.",
+        "description": "Integration: {integration}\n\nStatistikquelle: {source}\n\nGitHub: {repository}\n\nDateien eines aktuellen Releases: {assets}\n\nPrüfe die Zuordnung. Passende Download-Dateien werden über alle veröffentlichten Releases gezählt.",
         "data": {
           "name": "Projektname",
-          "top_versions": "Top-Versionen je Datenquelle neu erfassen",
+          "top_versions": "Anzahl neuer Top-Versionen je Datenquelle",
           "include_prereleases": "Vorabversionen bei der Auswahl neuer Top-Versionen berücksichtigen",
-          "update_interval": "Aktualisierungsintervall (Stunden)",
-          "asset_patterns": "Download-Dateimuster (leer: keine Downloads)"
+          "update_interval": "Aktualisierungsintervall",
+          "asset_patterns": "Dateien für Downloadzahlen"
+        },
+        "data_description": {
+          "name": "Frei wählbarer Gerätename, zum Beispiel Community Stats.",
+          "top_versions": "Beispiel: 10 erfasst die zehn Versionen mit den höchsten Installations- oder Downloadzahlen neu. Einstellbar: 1–100. Bereits erfasste Versionen werden weiterhin aktualisiert.",
+          "include_prereleases": "Auch Betaversionen bei der Auswahl neuer Top-Versionen berücksichtigen. Bereits erfasste Versionen und Gesamtsummen bleiben davon unabhängig.",
+          "update_interval": "Beispiel: 12 bedeutet alle zwölf Stunden. Einstellbar: 1–168 Stunden. Gilt für Analytics und GitHub mit Token. Ohne Token wird alle 61 Minuten das nächste GitHub-Projekt abgefragt.",
+          "asset_patterns": "Beispiel für Community Stats: community_stats.zip. Das ist der Name einer Datei aus den GitHub-Releases. *.zip zählt alle ZIP-Dateien. Ein Dateiname oder Muster je Zeile. Leer: keine Downloadsensoren; Sterne, Forks, Beobachter und Issues bleiben aktiv."
         }
       }
     },
@@ -55,15 +69,24 @@
     "step": {
       "init": {
         "title": "Projekteinstellungen",
-        "description": "Bereits erfasste Versionen bleiben erhalten, auch außerhalb der Top-Auswahl. Ein geändertes Repository oder andere Dateimuster erzeugen neue Download-Messreihen. Lass das Token-Feld leer, um den gespeicherten Token zu behalten. Manuelle Aktualisierungen beachten den Fünf-Minuten-Cache, die Warteschlange und die GitHub-Limits.\n\nOhne Token wird alle 61 Minuten das nächste GitHub-Projekt abgefragt. Mit Token gilt das eingestellte Intervall. Analytics verwendet immer das eingestellte Intervall.",
+        "description": "Ändere die Auswahl und Aktualisierung deines Projekts. Bereits erfasste Versionssensoren bleiben erhalten. Ein anderes Repository oder andere Dateimuster beginnen neue Download-Messreihen.",
         "data": {
-          "top_versions": "Top-Versionen je Datenquelle neu erfassen",
+          "top_versions": "Anzahl neuer Top-Versionen je Datenquelle",
           "include_prereleases": "Vorabversionen bei der Auswahl neuer Top-Versionen berücksichtigen",
-          "update_interval": "Aktualisierungsintervall (Stunden)",
+          "update_interval": "Aktualisierungsintervall",
           "repository": "GitHub-Repository",
-          "asset_patterns": "Download-Dateimuster (leer: keine Downloads)",
+          "asset_patterns": "Dateien für Downloadzahlen",
           "access_token": "GitHub-Token (optional)",
           "clear_token": "Gespeicherten GitHub-Token entfernen"
+        },
+        "data_description": {
+          "repository": "Beispiel: SoftwareSchmied/community-stats oder {repository_example_url}. Verwende die GitHub-Adresse des Projekts, keine lokale HACS-Adresse. Für reine Installationszahlen leer lassen.",
+          "top_versions": "Beispiel: 10 erfasst die zehn Versionen mit den höchsten Installations- oder Downloadzahlen neu. Einstellbar: 1–100. Bereits erfasste Versionen werden weiterhin aktualisiert.",
+          "include_prereleases": "Auch Betaversionen bei der Auswahl neuer Top-Versionen berücksichtigen. Bereits erfasste Versionen und Gesamtsummen bleiben davon unabhängig.",
+          "update_interval": "Beispiel: 12 bedeutet alle zwölf Stunden. Einstellbar: 1–168 Stunden. Gilt für Analytics und GitHub mit Token. Ohne Token wird alle 61 Minuten das nächste GitHub-Projekt abgefragt.",
+          "asset_patterns": "Beispiel für Community Stats: community_stats.zip. Das ist der Name einer Datei aus den GitHub-Releases. *.zip zählt alle ZIP-Dateien. Ein Dateiname oder Muster je Zeile. Leer: keine Downloadsensoren; Sterne, Forks, Beobachter und Issues bleiben aktiv.",
+          "access_token": "Leer lassen, um den gespeicherten Token zu behalten. Einen neuen Token hier einfügen; zum Entfernen die Option darunter verwenden. Manuelle Aktualisierungen beachten den Fünf-Minuten-Cache, die Warteschlange und GitHub-Limits.",
+          "clear_token": "Entfernt den Token für dieses Projekt. Seine GitHub-Abfragen wechseln zur gemeinsamen Warteschlange."
         }
       }
     },

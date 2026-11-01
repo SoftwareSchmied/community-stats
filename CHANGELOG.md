@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.1
+
+- Show the top-version count and update interval in editable number boxes during setup and configuration.
+- Add field explanations and a consistent Community Stats example for the integration domain, GitHub repository and release filename.
+- Explain filename patterns, empty fields and how the token affects the update interval next to the relevant settings.
+- Preserve integer settings when processing number-selector values.
+- Prefill the HACS release filename when several assets exist and the declared file matches an available asset; keep ambiguous selections empty.
+
 ## 0.3.0
 
 - Rotate GitHub projects without a token through one shared queue, with one project every 61 minutes.

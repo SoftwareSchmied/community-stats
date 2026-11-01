@@ -31,7 +31,7 @@ Alternatively, download `community_stats.zip` from the [latest release](https://
 
 Add an entry for each project you want to monitor. Projects do not have to be installed on your Home Assistant instance.
 
-- Enter an integration domain, for example `bosch_buderus_heating`, or a public GitHub repository such as `Sturmi77/heatpump-hydraulic-card`.
+- Enter an integration domain, for example `community_stats`, or a public GitHub repository such as `SoftwareSchmied/community-stats`.
 - You can enter both to map an integration to its repository explicitly.
 - For an installed custom integration, its manifest's documentation or issue URL can suggest a repository. Review that suggestion: documentation links can refer to a different project, and the Analytics feed itself has no repository mapping.
 - In the other direction, Community Stats reads `custom_components/*/manifest.json`. Repositories containing multiple integrations prompt for a selection. A repository without such a directory can still provide download sensors.
@@ -39,6 +39,22 @@ Add an entry for each project you want to monitor. Projects do not have to be in
 - To monitor only installation statistics, leave the repository empty and turn off the repository suggestion.
 
 The confirmation step shows the proposed domain, source, repository and filenames from a recent release. Give the project a name and choose which files to count. Leave the filename patterns empty for repository statistics without download sensors. Each entry creates one service device containing its sensors and a refresh button.
+
+### Example: monitor Community Stats itself
+
+| Field | Example value |
+| --- | --- |
+| Integration domain | `community_stats` |
+| GitHub repository | `SoftwareSchmied/community-stats` |
+| Installation statistics | Custom integration |
+| Project name | Community Stats |
+| Top versions | `10` |
+| Update interval | `12` hours |
+| Files for download counts | `community_stats.zip` |
+
+The domain is the integration's technical name. The repository field also accepts `https://github.com/SoftwareSchmied/community-stats`; a local HACS page address is not a repository URL. The filename refers to the ZIP attached to GitHub releases. `*.zip` counts all ZIP assets; use one filename or pattern per line. Leave it empty for repository metrics without downloads.
+
+The two numeric settings use editable number boxes, with explanations and examples next to the fields. Without a GitHub token, the 61-minute project rotation applies instead of the GitHub interval. Installation counts remain unavailable until Home Assistant Analytics reports the integration.
 
 ## GitHub repository statistics
 
@@ -77,7 +93,7 @@ GitHub exposes download counters for **files attached to releases**. It does not
 Select filenames or case-sensitive shell patterns, one per line:
 
 ```text
-heatpump-hydraulic-card.js
+community_stats.zip
 ```
 
 or:
@@ -86,7 +102,9 @@ or:
 *.zip
 ```
 
-Patterns apply to all published releases. Each matching asset is counted once even if several patterns match it. Be deliberate when using `*`: separate ZIP and JS assets, checksums, or alternative packages all have separate counters. A single filename is suggested only when a recent release contains a single asset.
+Patterns apply to all published releases. Each matching asset is counted once even if several patterns match it. Be deliberate when using `*`: separate ZIP and JS assets, checksums, or alternative packages all have separate counters. When a recent release contains a single asset, its filename is suggested automatically.
+
+GitHub does not prescribe a universal release filename. With several release files, Community Stats also checks the repository's `hacs.json`: its `filename` is suggested only if that exact file exists among the displayed release assets. If the choice remains ambiguous, the field stays empty. You can edit or clear any suggestion. This optional metadata lookup adds at most one setup request, and does not run during periodic updates.
 
 The total includes matching assets across **all currently available published releases**, including prereleases. Draft releases are excluded. A release with no matching asset is unavailable, rather than counted as zero. When no release has a matching asset, the total is also unavailable.
 

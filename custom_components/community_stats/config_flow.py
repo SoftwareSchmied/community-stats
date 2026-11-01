@@ -33,17 +33,38 @@ TOKEN_SELECTOR = selector.TextSelector(
 )
 TEXT_SELECTOR = selector.TextSelector()
 PATTERN_SELECTOR = selector.TextSelector(selector.TextSelectorConfig(multiline=True))
+REPOSITORY_EXAMPLE_URL = "https://github.com/SoftwareSchmied/community-stats"
+
+
+class WholeNumberSelector(selector.NumberSelector):
+    """Display a number box and retain integer values for version selection."""
+
+    def __call__(self, data: Any) -> int:
+        value = super().__call__(data)
+        if not value.is_integer():
+            raise vol.Invalid("Expected a whole number")
+        return int(value)
 
 
 def tuning_schema(values: dict[str, Any]) -> dict:
     """Shared per-project settings for setup and options."""
     return {
-        vol.Required(CONF_TOP, default=values.get(CONF_TOP, DEFAULT_TOP)): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=100)
+        vol.Required(CONF_TOP, default=values.get(CONF_TOP, DEFAULT_TOP)): WholeNumberSelector(
+            selector.NumberSelectorConfig(
+                min=1, max=100, step=1, mode=selector.NumberSelectorMode.BOX
+            )
         ),
         vol.Required(CONF_PRERELEASE, default=values.get(CONF_PRERELEASE, True)): bool,
-        vol.Required(CONF_INTERVAL, default=values.get(CONF_INTERVAL, DEFAULT_INTERVAL)): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=168)
+        vol.Required(
+            CONF_INTERVAL, default=values.get(CONF_INTERVAL, DEFAULT_INTERVAL)
+        ): WholeNumberSelector(
+            selector.NumberSelectorConfig(
+                min=1,
+                max=168,
+                step=1,
+                mode=selector.NumberSelectorMode.BOX,
+                unit_of_measurement="h",
+            )
         ),
     }
 
@@ -111,6 +132,7 @@ class CommunityStatsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+            description_placeholders={"repository_example_url": REPOSITORY_EXAMPLE_URL},
         )
 
     async def _async_prepare(self) -> FlowResult | None:
@@ -248,6 +270,19 @@ class CommunityStatsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 break
         if len(self._assets) == 1:
             self._candidate[CONF_PATTERNS] = self._assets[0]
+        elif self._assets:
+            # HACS can identify the intended package among several release files.
+            # Only propose a filename that has an actual release download counter.
+            try:
+                result = await github.async_json(
+                    f"/repos/{self._candidate[CONF_REPOSITORY]}/contents/hacs.json"
+                )
+                metadata = json.loads(base64.b64decode(result["content"]))
+            except SourceError, KeyError, TypeError, ValueError:
+                return
+            filename = metadata.get("filename") if isinstance(metadata, dict) else None
+            if isinstance(filename, str) and filename in self._assets:
+                self._candidate[CONF_PATTERNS] = filename
 
     async def async_step_project(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         """Confirm discovered sources and select the files to count."""
@@ -371,4 +406,9 @@ class OptionsFlow(config_entries.OptionsFlow):
                 vol.Optional("clear_token", default=False): bool,
             }
         )
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(fields), errors=errors)
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(fields),
+            errors=errors,
+            description_placeholders={"repository_example_url": REPOSITORY_EXAMPLE_URL},
+        )
