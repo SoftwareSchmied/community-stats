@@ -286,7 +286,11 @@ class CommunityStatsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders={
                 "integration": self._candidate.get(CONF_INTEGRATION) or "—",
-                "source": self._candidate.get(CONF_SOURCE, "—"),
+                "source": (
+                    self._candidate.get(CONF_SOURCE, "—")
+                    if self._candidate.get(CONF_INTEGRATION)
+                    else "—"
+                ),
                 "repository": self._candidate.get(CONF_REPOSITORY) or "—",
                 "assets": ", ".join(self._assets[:10]) or "—",
             },

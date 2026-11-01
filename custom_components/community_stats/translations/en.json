@@ -95,7 +95,7 @@
     },
     "integration_choice": {
       "options": {
-        "downloads-only": "GitHub downloads only"
+        "downloads-only": "GitHub statistics only"
       }
     }
   },
