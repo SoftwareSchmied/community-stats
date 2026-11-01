@@ -45,6 +45,17 @@ class SourceState:
     status: str = "disabled"
     last_success: datetime | None = None
     retry_at: float | None = None
+    metrics: dict[str, int] = field(default_factory=dict)
+
+
+def parse_repository_metrics(document: Any) -> dict[str, int]:
+    """GitHub watchers_count aliases stars; subscribers_count counts actual watchers."""
+    fields = {"stars": "stargazers_count", "forks": "forks_count", "watchers": "subscribers_count"}
+    if not isinstance(document, dict) or any(
+        not valid_count(document.get(field)) for field in fields.values()
+    ):
+        raise SourceError("invalid_data")
+    return {key: document[field] for key, field in fields.items()}
 
 
 def valid_count(value: Any) -> bool:

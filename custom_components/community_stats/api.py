@@ -7,6 +7,7 @@ from collections import deque
 from dataclasses import dataclass
 from email.utils import parsedate_to_datetime
 from typing import Any
+from urllib.parse import urlencode
 
 from aiohttp import ClientError, ClientSession
 from homeassistant.core import HomeAssistant
@@ -14,7 +15,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
 
 from .const import CORE_URL, CUSTOM_URL, DOMAIN, GITHUB_API, MIN_REFRESH_SECONDS
-from .models import Snapshot, SourceError
+from .models import Snapshot, SourceError, valid_count
 
 
 @dataclass
@@ -82,10 +83,60 @@ class GitHubClient:
         self._recent: dict[str, Snapshot] = {}
         self._scans: dict[str, dict[str, Any]] = {}
         self._scan_locks: dict[str, asyncio.Lock] = {}
+        self._metadata: dict[str, Snapshot] = {}
+        self._metadata_locks: dict[str, asyncio.Lock] = {}
         self._requests: deque[float] = deque()
         self.remaining: int | None = None
         self.reset_at: float | None = None
         self.retry_at: float | None = None
+        self.search_remaining: int | None = None
+        self.search_reset_at: float | None = None
+        self.search_retry_at: float | None = None
+
+    async def async_metadata(self, path: str) -> Snapshot:
+        """Share repository and search snapshots across all matching project entries."""
+        async with self._metadata_locks.setdefault(path, asyncio.Lock()):
+            cached = self._metadata.get(path)
+            if cached and time.time() - cached.fetched_at.timestamp() < MIN_REFRESH_SECONDS:
+                return cached
+            response = await self._async_request(path)
+            snapshot = Snapshot(response.body, dt_util.utcnow())
+            self._metadata[path] = snapshot
+            return snapshot
+
+    async def async_repository(self, repository: str) -> Snapshot:
+        return await self.async_metadata(f"/repos/{repository}")
+
+    async def async_issues(self, repository: str) -> Snapshot:
+        """Search real issues, excluding pull requests, with separate search quota."""
+        paths = [
+            "/search/issues?"
+            + urlencode({"q": f"repo:{repository} is:issue{suffix}", "per_page": 1})
+            for suffix in ("", " is:open")
+        ]
+        snapshots = []
+        values = {}
+        for key, path in zip(("issues_total", "issues_open"), paths, strict=True):
+            snapshot = await self.async_metadata(path)
+            snapshots.append(snapshot)
+            data = snapshot.body
+            if (
+                not isinstance(data, dict)
+                or not valid_count(data.get("total_count"))
+                or data.get("incomplete_results") is not False
+            ):
+                raise SourceError("invalid_data")
+            values[key] = data["total_count"]
+        if values["issues_open"] > values["issues_total"]:
+            raise SourceError("invalid_data")
+        return Snapshot(values, min(snapshot.fetched_at for snapshot in snapshots))
+
+    def _set_retry(self, resource: str, retry_at: float) -> SourceError:
+        if resource == "search":
+            self.search_retry_at = retry_at
+        else:
+            self.retry_at = retry_at
+        return SourceError("rate_limited", retry_at)
 
     async def async_json(self, path: str) -> Any:
         """Read setup metadata with the same quota handling as statistics."""
@@ -94,8 +145,9 @@ class GitHubClient:
 
     async def _async_request(self, path: str) -> CachedResponse:
         """Serialize requests; never follow redirects with a token to another host."""
-        if not path.startswith("/repos/") or ".." in path.split("/"):
+        if not path.startswith(("/repos/", "/search/issues?")) or ".." in path.split("/"):
             raise SourceError("invalid_repository")
+        resource = "search" if path.startswith("/search/") else "core"
         async with self._lock:
             now = time.time()
             if failure := self._failures.get(path):
@@ -103,20 +155,24 @@ class GitHubClient:
                     raise failure[1]
             if self.retry_at is not None and now < self.retry_at:
                 raise SourceError("rate_limited", self.retry_at)
+            if resource == "search" and self.search_retry_at and now < self.search_retry_at:
+                raise SourceError("rate_limited", self.search_retry_at)
             while self._requests and self._requests[0] <= now - 3600:
                 self._requests.popleft()
             limit = 4500 if self._token else 50
             if len(self._requests) >= limit:
                 self.retry_at = self._requests[0] + 3601
                 raise SourceError("rate_limited", self.retry_at)
-            if self.remaining is not None and self.remaining <= 2:
-                if self.reset_at and now < self.reset_at:
-                    self.retry_at = self.reset_at + 1
-                    raise SourceError("rate_limited", self.retry_at)
+            remaining = self.search_remaining if resource == "search" else self.remaining
+            reset_at = self.search_reset_at if resource == "search" else self.reset_at
+            reserve = 0 if resource == "search" else 2
+            if remaining is not None and remaining <= reserve:
+                if reset_at and now < reset_at:
+                    raise self._set_retry(resource, reset_at + 1)
             headers = {
                 "Accept": "application/vnd.github+json",
                 "X-GitHub-Api-Version": "2022-11-28",
-                "User-Agent": "Community-Stats/0.1.0",
+                "User-Agent": "Community-Stats/0.2.0",
             }
             if self._token:
                 headers["Authorization"] = f"Bearer {self._token}"
@@ -134,7 +190,8 @@ class GitHubClient:
                             ("X-RateLimit-Reset", "reset_at"),
                         ):
                             try:
-                                setattr(self, attr, int(response.headers[key]))
+                                prefix = "search_" if resource == "search" else ""
+                                setattr(self, prefix + attr, int(response.headers[key]))
                             except KeyError, ValueError:
                                 pass
                         if response.status == 304 and cached:
@@ -152,9 +209,15 @@ class GitHubClient:
                         if response.status in (403, 429):
                             body = await response.text()
                             retry = response.headers.get("Retry-After")
+                            remaining = (
+                                self.search_remaining if resource == "search" else self.remaining
+                            )
+                            reset_at = (
+                                self.search_reset_at if resource == "search" else self.reset_at
+                            )
                             if (
                                 response.status == 429
-                                or self.remaining == 0
+                                or remaining == 0
                                 or retry
                                 or "rate limit" in body.lower()
                             ):
@@ -167,10 +230,13 @@ class GitHubClient:
                                             retry_at = parsedate_to_datetime(retry).timestamp()
                                         except ValueError, TypeError, OverflowError:
                                             pass
-                                if self.remaining == 0 and self.reset_at:
-                                    retry_at = max(retry_at, self.reset_at + 1)
-                                self.retry_at = max(now + 60, retry_at)
-                                raise SourceError("rate_limited", self.retry_at)
+                                if remaining == 0 and reset_at:
+                                    retry_at = max(retry_at, reset_at + 1)
+                                # Secondary limits can apply across API resources.
+                                blocked_resource = (
+                                    "core" if "secondary" in body.lower() else resource
+                                )
+                                raise self._set_retry(blocked_resource, max(now + 60, retry_at))
                             raise SourceError("access_denied")
                         if response.status != 200:
                             raise SourceError("cannot_connect")
@@ -182,7 +248,10 @@ class GitHubClient:
                         )
                         self._responses[path] = item
                         self._failures.pop(path, None)
-                        self.retry_at = None
+                        if resource == "search":
+                            self.search_retry_at = None
+                        else:
+                            self.retry_at = None
                         return item
             except (ClientError, TimeoutError, ValueError) as err:
                 failure = SourceError("cannot_connect")

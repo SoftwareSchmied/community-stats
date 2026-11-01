@@ -27,7 +27,7 @@
           "top_versions": "Top versions to discover per source",
           "include_prereleases": "Include prereleases in new top-version selections",
           "update_interval": "Update interval (hours)",
-          "asset_patterns": "Release filenames or patterns (one per line)"
+          "asset_patterns": "Download filename patterns (empty: no downloads)"
         }
       }
     },
@@ -35,7 +35,6 @@
       "project_required": "Enter an integration domain or a GitHub repository.",
       "invalid_domain": "Use the integration domain, with lowercase letters, digits and underscores.",
       "invalid_repository": "Enter owner/repository or a valid HTTPS GitHub repository URL.",
-      "patterns_required": "Choose at least one release filename or pattern, such as *.zip. Multiple patterns count every matching file once.",
       "name_required": "Enter a project name.",
       "cannot_connect": "Could not connect. Try again later.",
       "invalid_data": "The source returned an unexpected data format.",
@@ -62,7 +61,7 @@
           "include_prereleases": "Include prereleases in new top-version selections",
           "update_interval": "Update interval (hours)",
           "repository": "GitHub repository",
-          "asset_patterns": "Release filenames or patterns (one per line)",
+          "asset_patterns": "Download filename patterns (empty: no downloads)",
           "access_token": "GitHub token (optional)",
           "clear_token": "Remove the saved GitHub token"
         }
@@ -72,7 +71,6 @@
       "project_required": "Enter an integration domain or a GitHub repository.",
       "invalid_domain": "Use the integration domain, with lowercase letters, digits and underscores.",
       "invalid_repository": "Enter owner/repository or a valid HTTPS GitHub repository URL.",
-      "patterns_required": "Choose at least one release filename or pattern, such as *.zip. Multiple patterns count every matching file once.",
       "name_required": "Enter a project name.",
       "cannot_connect": "Could not connect. Try again later.",
       "invalid_data": "The source returned an unexpected data format.",
@@ -156,6 +154,57 @@
       },
       "downloads_retry_at": {
         "name": "GitHub retry at"
+      },
+      "issues_last_success": {
+        "name": "Issues last successful update"
+      },
+      "repository_last_success": {
+        "name": "Repository last successful update"
+      },
+      "github_forks": {
+        "name": "GitHub forks"
+      },
+      "issues_status": {
+        "state": {
+          "ok": "OK",
+          "disabled": "Not configured",
+          "cannot_connect": "Connection failed",
+          "invalid_data": "Invalid source data",
+          "not_found": "No data found",
+          "rate_limited": "Rate limited",
+          "invalid_auth": "Invalid GitHub token",
+          "access_denied": "Access denied",
+          "no_matching_assets": "No matching release files",
+          "repository_moved": "Repository moved"
+        },
+        "name": "GitHub issue status"
+      },
+      "repository_status": {
+        "state": {
+          "ok": "OK",
+          "disabled": "Not configured",
+          "cannot_connect": "Connection failed",
+          "invalid_data": "Invalid source data",
+          "not_found": "No data found",
+          "rate_limited": "Rate limited",
+          "invalid_auth": "Invalid GitHub token",
+          "access_denied": "Access denied",
+          "no_matching_assets": "No matching release files",
+          "repository_moved": "Repository moved"
+        },
+        "name": "GitHub repository status"
+      },
+      "github_issues_open": {
+        "name": "Open issues"
+      },
+      "github_watchers": {
+        "name": "GitHub watchers"
+      },
+      "github_stars": {
+        "name": "GitHub stars"
+      },
+      "github_issues_total": {
+        "name": "Total issues"
       }
     },
     "button": {

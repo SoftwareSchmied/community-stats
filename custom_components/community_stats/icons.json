@@ -21,6 +21,21 @@
       },
       "downloads_remaining": {
         "default": "mdi:counter"
+      },
+      "github_watchers": {
+        "default": "mdi:eye"
+      },
+      "github_issues_open": {
+        "default": "mdi:alert-circle-outline"
+      },
+      "github_forks": {
+        "default": "mdi:source-fork"
+      },
+      "github_stars": {
+        "default": "mdi:star"
+      },
+      "github_issues_total": {
+        "default": "mdi:alert-circle-outline"
       }
     },
     "button": {

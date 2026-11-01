@@ -138,3 +138,25 @@ async def test_local_unauthenticated_budget_bounds_requests(hass, aioclient_mock
     with pytest.raises(SourceError, match="rate_limited"):
         await client.async_json("/repos/owner/repo")
     assert aioclient_mock.call_count == 0
+
+
+@pytest.mark.parametrize("retry_header", ["Sun, 01 Nov 2026 01:00:00 GMT", "invalid"])
+@pytest.mark.freeze_time("2026-11-01 00:00:00+00:00")
+async def test_retry_after_date_and_invalid_header(hass, aioclient_mock, retry_header):
+    aioclient_mock.get(
+        f"{GITHUB_API}/repos/owner/repo", status=429, headers={"Retry-After": retry_header}
+    )
+    client = GitHubClient(async_get_clientsession(hass), "")
+    with pytest.raises(SourceError, match="rate_limited") as error:
+        await client.async_json("/repos/owner/repo")
+    expected_delay = 60 if retry_header == "invalid" else 3600
+    assert error.value.retry_at == time.time() + expected_delay
+
+
+async def test_non_json_response_is_unavailable_and_has_cooldown(hass, aioclient_mock):
+    aioclient_mock.get(f"{GITHUB_API}/repos/owner/repo", text="<html>Unavailable</html>")
+    client = GitHubClient(async_get_clientsession(hass), "")
+    for _ in range(2):
+        with pytest.raises(SourceError, match="cannot_connect"):
+            await client.async_json("/repos/owner/repo")
+    assert aioclient_mock.call_count == 1

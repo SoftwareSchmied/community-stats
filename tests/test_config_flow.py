@@ -211,6 +211,7 @@ async def test_options_can_remove_saved_secret(hass):
         },
     )
     assert entry.options[CONF_ACCESS_TOKEN] == ""
+    assert CONF_ACCESS_TOKEN not in entry.data
 
 
 async def test_changing_repository_updates_duplicate_detection(hass):
@@ -259,3 +260,64 @@ async def test_auto_source_detects_core(hass, source_clients):
         result = await start(hass, {"integration_domain": "mqtt", "analytics_source": "auto"})
     assert result["description_placeholders"]["source"] == "core"
     assert result["description_placeholders"]["repository"] == "—"
+
+
+async def test_downloads_only_after_failed_domain_selection_clears_mapping(hass, source_clients):
+    from custom_components.community_stats.models import SourceError
+
+    github = AsyncMock()
+    manifest = base64.b64encode(json.dumps({"domain": "first", "name": "First"}).encode())
+    github.async_json.side_effect = [
+        {"full_name": "owner/repo", "private": False},
+        [{"type": "dir", "name": "first"}, {"type": "dir", "name": "second"}],
+        {"content": manifest.decode()},
+        SourceError("cannot_connect"),
+        [],
+    ]
+    with patch("custom_components.community_stats.config_flow.get_github", return_value=github):
+        result = await start(hass, {"repository": "owner/repo"})
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"integration_domain": "first"}
+        )
+        assert result["errors"] == {"base": "cannot_connect"}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"integration_domain": "downloads-only"}
+        )
+        result = await finish(hass, result, asset_patterns="*.zip")
+    assert result["data"]["integration_domain"] == ""
+
+
+@pytest.mark.parametrize("assets", [None, 5, "invalid"])
+async def test_malformed_release_assets_show_validation_error(hass, assets):
+    github = AsyncMock()
+    github.async_json.side_effect = [
+        {"full_name": "owner/repo", "private": False},
+        [{"assets": assets}],
+    ]
+    with patch("custom_components.community_stats.config_flow.get_github", return_value=github):
+        result = await start(
+            hass,
+            {
+                "integration_domain": "test_project",
+                "analytics_source": "custom",
+                "repository": "owner/repo",
+            },
+        )
+    assert result["errors"] == {"base": "invalid_data"}
+
+
+async def test_invalid_core_feed_structure_is_a_form_error(hass):
+    from homeassistant.util import dt as dt_util
+
+    from custom_components.community_stats.models import Snapshot
+
+    analytics = AsyncMock()
+    analytics.async_get.side_effect = [
+        Snapshot({}, dt_util.utcnow()),
+        Snapshot({"integrations": None}, dt_util.utcnow()),
+    ]
+    with patch(
+        "custom_components.community_stats.config_flow.get_analytics", return_value=analytics
+    ):
+        result = await start(hass, {"integration_domain": "example", "analytics_source": "auto"})
+    assert result["errors"] == {"base": "invalid_data"}

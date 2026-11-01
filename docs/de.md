@@ -1,6 +1,6 @@
 # Community Stats – Anleitung
 
-Community Stats stellt gemeldete Installationszahlen und GitHub-Release-Downloads als Sensoren in Home Assistant bereit. Jede genaue Version bekommt eine eigene, feste Messreihe. Grafana und InfluxDB werden nicht benötigt.
+Community Stats stellt gemeldete Installationszahlen, GitHub-Release-Downloads sowie Sterne, Forks, Beobachter und Issues als Sensoren in Home Assistant bereit. Jede genaue Version bekommt eine eigene, feste Messreihe. Grafana und InfluxDB werden nicht benötigt.
 
 ## Installation über HACS / Marketplace
 
@@ -29,6 +29,8 @@ Prüfe die vorgeschlagene Zuordnung im Bestätigungsschritt. Um ausschließlich 
 
 ## Welche Dateien zählen?
 
+Lass die Dateimuster leer, wenn du nur Repository-Statistiken erfassen möchtest. In diesem Fall werden keine Downloadsensoren angelegt. Das funktioniert auch für Repositories ohne Release-Dateien.
+
 GitHub zählt Abrufe der **an Releases angehängten Dateien**. Quellcodearchive, beliebige Repository-Dateien oder Git-Clones haben keine entsprechenden öffentlichen Zähler. Ein HACS-Download zählt nur dann in dieser Statistik, wenn der jeweilige Downloadweg diese Release-Datei verwendet.
 
 Pro Zeile einen genauen Dateinamen oder ein Muster angeben, etwa:
@@ -55,6 +57,14 @@ Alle Zähler verwenden die Zustandsklasse **measurement**. Sinkende Installation
 
 Der Verlauf beginnt mit der eigenen Aufzeichnung. Eine historische Versionsentwicklung wird nicht nachgeladen. [Dashboard-Beispiele](../examples/dashboard.yaml) zeigen Gesamtzahlen und einzelne Versionen. Eine zusätzliche Vorlage für gestapelte Flächen verwendet optional die ApexCharts Card; sie ist keine Voraussetzung für die Integration.
 
+## Sterne, Forks, Beobachter und Issues
+
+Für jedes konfigurierte GitHub-Repository entstehen außerdem Sensoren für **Sterne**, **Forks**, **Beobachter**, **Issues gesamt** und **offene Issues**. Alle liefern numerische Zustände und unterstützen Langzeitstatistiken. Auch diese Zahlen dürfen sinken.
+
+Beobachter sind tatsächliche Repository-Abonnenten. GitHubs Feld `watchers_count` entspricht dagegen historisch der Sternezahl und wird dafür nicht verwendet. Issues gesamt umfasst offene und geschlossene Issues; Pull Requests werden bei beiden Issue-Sensoren ausgeschlossen. Dafür werden zwei Suchabfragen verwendet. Der GitHub-Suchindex kann Änderungen verzögert anzeigen; unvollständige Suchergebnisse gelten als nicht verfügbar.
+
+Diese Messreihen bleiben bei Änderungen der Download-Dateimuster erhalten. Eigene Statussensoren zeigen Fehler der Repository- und Issue-Abfragen an.
+
 ## Aktualisierung und Zugriff
 
 Standard: **alle zwölf Stunden**, je Projekt zwischen einer und 168 Stunden einstellbar. Die Schaltfläche **Aktualisieren** am Gerät erlaubt eine manuelle Abfrage. Erfolgreiche Daten werden für fünf Minuten geteilt; häufiges Klicken umgeht weder dieses Zeitfenster noch GitHubs Limits.
@@ -62,6 +72,8 @@ Standard: **alle zwölf Stunden**, je Projekt zwischen einer und 168 Stunden ein
 GitHub erlaubt normalerweise 60 Anfragen pro Stunde je öffentlicher IP ohne Token und 5.000 je Benutzerkonto mit Token. Andere Anwendungen können dasselbe Kontingent nutzen. Ein API-Aufruf liefert bis zu 100 Releases und damit viele Sensorwerte. Die Integration bündelt Abfragen, berücksichtigt das verbleibende Kontingent und setzt unterbrochene Seitenabrufe nach einer Limitsperre fort. Unvollständige Summen werden nicht veröffentlicht. Sehr große Repositories können mehrere Stunden benötigen; ein länger als 24 Stunden unterbrochener Scan startet neu.
 
 Ein GitHub-Token ist optional und benötigt keine Schreibrechte. In den Projekteinstellungen lässt er sich ergänzen oder entfernen. Ein leeres Token-Eingabefeld behält den vorhandenen Token. Derselbe Token wird über gemeinsame Clients genutzt, muss aber in jedem gewünschten Projekteintrag hinterlegt sein.
+
+Mit einer Seite Releases benötigt ein Repository normalerweise **vier GitHub-Abfragen je Aktualisierung**: eine für Repository-Zahlen, zwei für echte Issue-Zahlen und eine für die Downloads. Ohne Downloads sind es drei. Einrichtung und weitere Release-Seiten kommen gegebenenfalls hinzu. Die Suchabfragen besitzen ein zusätzliches eigenes Kontingent. Bei einer Suchsperre können Sterne, Forks, Beobachter und Downloads weiter aktualisiert werden. Größere Sammlungen verteilen sich bei Bedarf auf mehrere Freigabezeiträume.
 
 Analytics und GitHub aktualisieren sich unabhängig voneinander. Statussensoren, der letzte erfolgreiche Abruf und gegebenenfalls die nächste GitHub-Freigabe machen Ausfälle sichtbar. Der standardmäßig deaktivierte Sensor für verbleibende GitHub-Anfragen zeigt das zuletzt beobachtete Kontingent.
 

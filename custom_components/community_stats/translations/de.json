@@ -27,7 +27,7 @@
           "top_versions": "Top-Versionen je Datenquelle neu erfassen",
           "include_prereleases": "Vorabversionen bei der Auswahl neuer Top-Versionen berücksichtigen",
           "update_interval": "Aktualisierungsintervall (Stunden)",
-          "asset_patterns": "Release-Dateinamen oder Muster (ein Muster pro Zeile)"
+          "asset_patterns": "Download-Dateimuster (leer: keine Downloads)"
         }
       }
     },
@@ -35,7 +35,6 @@
       "project_required": "Gib eine Integrations-Domain oder ein GitHub-Repository an.",
       "invalid_domain": "Verwende die Domain mit Kleinbuchstaben, Ziffern und Unterstrichen.",
       "invalid_repository": "Gib Besitzer/Repository oder die HTTPS-Adresse des GitHub-Repositories an.",
-      "patterns_required": "Wähle mindestens einen Release-Dateinamen oder ein Muster, beispielsweise *.zip. Jede passende Datei wird nur einmal gezählt.",
       "name_required": "Gib einen Projektnamen an.",
       "cannot_connect": "Verbindung fehlgeschlagen. Versuche es später erneut.",
       "invalid_data": "Die Datenquelle hat ein unerwartetes Datenformat geliefert.",
@@ -62,7 +61,7 @@
           "include_prereleases": "Vorabversionen bei der Auswahl neuer Top-Versionen berücksichtigen",
           "update_interval": "Aktualisierungsintervall (Stunden)",
           "repository": "GitHub-Repository",
-          "asset_patterns": "Release-Dateinamen oder Muster (ein Muster pro Zeile)",
+          "asset_patterns": "Download-Dateimuster (leer: keine Downloads)",
           "access_token": "GitHub-Token (optional)",
           "clear_token": "Gespeicherten GitHub-Token entfernen"
         }
@@ -72,7 +71,6 @@
       "project_required": "Gib eine Integrations-Domain oder ein GitHub-Repository an.",
       "invalid_domain": "Verwende die Domain mit Kleinbuchstaben, Ziffern und Unterstrichen.",
       "invalid_repository": "Gib Besitzer/Repository oder die HTTPS-Adresse des GitHub-Repositories an.",
-      "patterns_required": "Wähle mindestens einen Release-Dateinamen oder ein Muster, beispielsweise *.zip. Jede passende Datei wird nur einmal gezählt.",
       "name_required": "Gib einen Projektnamen an.",
       "cannot_connect": "Verbindung fehlgeschlagen. Versuche es später erneut.",
       "invalid_data": "Die Datenquelle hat ein unerwartetes Datenformat geliefert.",
@@ -156,6 +154,57 @@
       },
       "downloads_retry_at": {
         "name": "Nächster GitHub-Versuch"
+      },
+      "issues_last_success": {
+        "name": "Issues zuletzt erfolgreich"
+      },
+      "repository_last_success": {
+        "name": "Repository zuletzt erfolgreich"
+      },
+      "github_forks": {
+        "name": "GitHub-Forks"
+      },
+      "issues_status": {
+        "state": {
+          "ok": "OK",
+          "disabled": "Nicht eingerichtet",
+          "cannot_connect": "Verbindung fehlgeschlagen",
+          "invalid_data": "Ungültige Quelldaten",
+          "not_found": "Keine Daten gefunden",
+          "rate_limited": "Abfragelimit erreicht",
+          "invalid_auth": "Ungültiger GitHub-Token",
+          "access_denied": "Zugriff verweigert",
+          "no_matching_assets": "Keine passenden Release-Dateien",
+          "repository_moved": "Repository verschoben"
+        },
+        "name": "GitHub-Issue-Status"
+      },
+      "repository_status": {
+        "state": {
+          "ok": "OK",
+          "disabled": "Nicht eingerichtet",
+          "cannot_connect": "Verbindung fehlgeschlagen",
+          "invalid_data": "Ungültige Quelldaten",
+          "not_found": "Keine Daten gefunden",
+          "rate_limited": "Abfragelimit erreicht",
+          "invalid_auth": "Ungültiger GitHub-Token",
+          "access_denied": "Zugriff verweigert",
+          "no_matching_assets": "Keine passenden Release-Dateien",
+          "repository_moved": "Repository verschoben"
+        },
+        "name": "GitHub-Repository-Status"
+      },
+      "github_issues_open": {
+        "name": "Offene Issues"
+      },
+      "github_watchers": {
+        "name": "GitHub-Beobachter"
+      },
+      "github_stars": {
+        "name": "GitHub-Sterne"
+      },
+      "github_issues_total": {
+        "name": "Issues gesamt"
       }
     },
     "button": {

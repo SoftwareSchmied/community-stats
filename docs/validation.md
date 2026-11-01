@@ -1,0 +1,22 @@
+# Validation of 0.2.0
+
+Validated on 1 November 2026 with Home Assistant 2026.10.4 and Python 3.14.7 on Linux.
+
+| Check | Result |
+| --- | --- |
+| Automated suite | 88 tests pass with external sockets disabled |
+| Coverage including branches | 91.04% |
+| Ruff lint and formatting | Pass |
+| Hassfest | No invalid integrations |
+| Real Recorder statistics | Hourly min/max/mean for falling installation counts match the input data; no counter-reset sum |
+| Release archive installation | Three projects configured from the extracted archive in an isolated Home Assistant |
+| Restart recovery | All 12 numeric sensors keep their entity IDs after shutdown and startup |
+| Public source requests | Custom integration, core integration, release downloads and repository metrics return numeric values |
+
+The automated tests cover exact version identities, rank changes, missing and returning versions, zero and decreasing counts, option reloads, token removal and migration, pagination, incomplete search results, independent search limits, retry scheduling and shared manual-refresh caching.
+
+GitHub metrics distinguish actual subscribers from stars, and issue searches exclude pull requests. Changing release filename filters preserves repository-metric histories. Empty filename patterns permit repository statistics without download sensors.
+
+The release installation test uses a temporary configuration and the published data sources, not an existing Home Assistant installation. It checks backend configuration flows and entity states; it is not a visual dashboard test. The standalone environment's optional media-library warnings do not affect these statistics checks.
+
+Reproduce the checks with the commands in [development.md](development.md). HACS and Hassfest also run in the repository's [Validate workflow](https://github.com/SoftwareSchmied/community-stats/actions/workflows/validate.yml).

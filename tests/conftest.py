@@ -53,6 +53,19 @@ def source_clients(releases):
     )
     github = AsyncMock()
     github.async_releases.return_value = Snapshot(releases, dt_util.utcnow())
+    github.async_repository.return_value = Snapshot(
+        {
+            "stargazers_count": 26,
+            "forks_count": 10,
+            "subscribers_count": 3,
+            "watchers_count": 26,
+            "open_issues_count": 36,
+        },
+        dt_util.utcnow(),
+    )
+    github.async_issues.return_value = Snapshot(
+        {"issues_total": 50, "issues_open": 35}, dt_util.utcnow()
+    )
     github.remaining = 48
     github.retry_at = None
     with (

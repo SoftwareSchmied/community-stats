@@ -20,7 +20,11 @@ async def async_get_config_entry_diagnostics(
                 "status": state.status,
                 "last_success": state.last_success,
                 "retry_at": state.retry_at,
-                "tracked_versions": coordinator.known_versions(source),
+                "tracked_versions": (
+                    coordinator.known_versions(source)
+                    if source in ("installations", "downloads")
+                    else []
+                ),
             }
             for source, state in coordinator.states.items()
         },

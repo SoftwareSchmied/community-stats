@@ -8,6 +8,11 @@ cards:
       - sensor.bosch_buderus_heating_reported_installations
       - sensor.bosch_buderus_heating_release_downloads_total
       - sensor.heatpump_hydraulic_card_release_downloads_total
+      - sensor.heatpump_hydraulic_card_github_stars
+      - sensor.heatpump_hydraulic_card_github_forks
+      - sensor.heatpump_hydraulic_card_github_watchers
+      - sensor.heatpump_hydraulic_card_total_issues
+      - sensor.heatpump_hydraulic_card_open_issues
       - button.bosch_buderus_heating_refresh
   - type: history-graph
     title: Recent installation history

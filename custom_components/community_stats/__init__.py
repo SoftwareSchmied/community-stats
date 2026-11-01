@@ -1,6 +1,7 @@
 """Community Stats: reported installations and release asset downloads."""
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN, PLATFORMS
@@ -11,6 +12,12 @@ type CommunityStatsEntry = ConfigEntry[CommunityStatsCoordinator]
 
 async def async_setup_entry(hass: HomeAssistant, entry: CommunityStatsEntry) -> bool:
     """Set up one project; additional projects use additional entries."""
+    if CONF_ACCESS_TOKEN in entry.options and CONF_ACCESS_TOKEN in entry.data:
+        # Clean up credentials that were overridden or removed in older versions.
+        hass.config_entries.async_update_entry(
+            entry,
+            data={key: value for key, value in entry.data.items() if key != CONF_ACCESS_TOKEN},
+        )
     coordinator = CommunityStatsCoordinator(hass, entry)
     await coordinator.async_load_tracking()
     await coordinator.async_config_entry_first_refresh()

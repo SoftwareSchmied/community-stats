@@ -32,6 +32,7 @@ from .models import (
     parse_analytics,
     parse_downloads,
     parse_patterns,
+    parse_repository_metrics,
     top_versions,
     version_key,
 )
@@ -51,7 +52,10 @@ class CommunityStatsCoordinator(DataUpdateCoordinator[dict[str, SourceState]]):
         self.patterns = parse_patterns(self.settings.get(CONF_PATTERNS, ""))
         self.github = get_github(hass, self.settings.get(CONF_ACCESS_TOKEN, ""))
         self.analytics = get_analytics(hass)
-        self.states = {"installations": SourceState(), "downloads": SourceState()}
+        self.states = {
+            source: SourceState()
+            for source in ("installations", "downloads", "repository", "issues")
+        }
         self.scopes = {
             "installations": version_key(f"{self.analytics_source}:{self.integration_domain}"),
             "downloads": version_key(f"{self.repository.lower()}:{self.patterns}"),
@@ -83,6 +87,8 @@ class CommunityStatsCoordinator(DataUpdateCoordinator[dict[str, SourceState]]):
 
     def enabled(self, source: str) -> bool:
         """Check whether a project has this source configured."""
+        if source == "downloads":
+            return bool(self.repository and self.patterns)
         return bool(self.integration_domain if source == "installations" else self.repository)
 
     async def _async_update_source(self, source: str) -> None:
@@ -95,10 +101,17 @@ class CommunityStatsCoordinator(DataUpdateCoordinator[dict[str, SourceState]]):
                 counts = parse_analytics(
                     snapshot.body, self.integration_domain, self.analytics_source
                 )
-            else:
+            elif source == "downloads":
                 snapshot = await self.github.async_releases(self.repository)
                 counts = parse_downloads(snapshot.body, self.patterns)
-            state.counts = counts
+            elif source == "repository":
+                snapshot = await self.github.async_repository(self.repository)
+                state.metrics = parse_repository_metrics(snapshot.body)
+            else:
+                snapshot = await self.github.async_issues(self.repository)
+                state.metrics = snapshot.body
+            if source in ("installations", "downloads"):
+                state.counts = counts
             state.last_success = snapshot.fetched_at
             state.status = "ok"
             state.retry_at = None
@@ -107,11 +120,10 @@ class CommunityStatsCoordinator(DataUpdateCoordinator[dict[str, SourceState]]):
             state.retry_at = err.retry_at
 
     async def _async_update_data(self) -> dict[str, SourceState]:
-        await asyncio.gather(
-            self._async_update_source("installations"), self._async_update_source("downloads")
-        )
+        await asyncio.gather(*(self._async_update_source(source) for source in self.states))
         changed = False
-        for source, state in self.states.items():
+        for source in ("installations", "downloads"):
+            state = self.states[source]
             if state.status != "ok":
                 continue
             previous = self.known_versions(source)

@@ -2,7 +2,7 @@
 
 <img src="custom_components/community_stats/brand/icon.png" width="96" alt="Community Stats icon">
 
-Track reported Home Assistant integration installations and GitHub release downloads as Home Assistant sensors. Follow adoption over time, compare projects, and keep the history of each exact version separate.
+Track reported Home Assistant integration installations, GitHub release downloads, stars, forks, watchers and issues as Home Assistant sensors. Follow adoption over time, compare projects, and keep the history of each exact version separate.
 
 [Deutsche Anleitung](docs/de.md) · [Dashboard examples](examples/dashboard.yaml) · [Report an issue](https://github.com/SoftwareSchmied/community-stats/issues)
 
@@ -38,7 +38,23 @@ Add an entry for each project you want to monitor. Projects do not have to be in
 - **Automatic** Analytics detection checks custom integration data first, then core data. Choose **Core** or **Custom** explicitly if the same domain appears in both. An explicitly selected source also allows adding a domain before it appears in Analytics.
 - To monitor only installation statistics, leave the repository empty and turn off the repository suggestion.
 
-The confirmation step shows the proposed domain, source, repository and filenames from a recent release. Give the project a name and choose which files to count. Each entry creates one service device containing its sensors and a refresh button.
+The confirmation step shows the proposed domain, source, repository and filenames from a recent release. Give the project a name and choose which files to count. Leave the filename patterns empty for repository statistics without download sensors. Each entry creates one service device containing its sensors and a refresh button.
+
+## GitHub repository statistics
+
+Each configured public repository also provides five numeric sensors:
+
+| Sensor | Definition |
+| --- | --- |
+| Stars | Current stargazers |
+| Forks | Current repository fork count |
+| Watchers | Actual subscribers, using `subscribers_count`; GitHub's `watchers_count` is a legacy alias for stars |
+| Total issues | Open plus closed issues, excluding pull requests |
+| Open issues | Open issues, excluding pull requests |
+
+These sensors support long-term statistics and can decrease. They work even when the repository has no release assets. Their history is independent of download filename filters. GitHub's repository-level `open_issues_count` includes pull requests, so Community Stats uses two issue searches with `is:issue` to obtain the precise counts. Incomplete search results are unavailable rather than published as partial totals.
+
+Repository and issue-source status sensors keep search failures separate from stars, forks, watchers and release downloads. The search index can lag changes made directly on GitHub.
 
 ## Sensors and version history
 
@@ -82,13 +98,15 @@ Downloads count requests, not users or active installations. Repeated downloads 
 
 - Default refresh: every **12 hours**, configurable from 1 to 168 hours per project.
 - Use the device's **Refresh** button or Home Assistant's `homeassistant.update_entity` action for a manual update. Recent successful data is shared for **five minutes**; repeated clicks do not bypass this cache or GitHub's quota.
-- Analytics documents and GitHub release scans are shared between projects using the same source and credential. One API page can contain up to 100 releases and feeds many sensors.
+- Analytics documents, repository metadata, issue searches and GitHub release scans are shared between projects using the same source and credential. One API page can contain up to 100 releases and feeds many sensors.
+- A repository with one page of releases normally uses **four GitHub requests per refresh**: one for repository metadata, two for issue counts and one for releases. Without download sensors, it uses three. Setup discovery and additional release pages can require more requests.
 - All pages must be fetched before a complete download total is published. A scan interrupted by a rate limit resumes when the limit permits; no partial total is exposed. A scan older than 24 hours starts again.
 - GitHub normally permits **60 unauthenticated REST requests per hour per public IP**, or **5,000 authenticated requests per hour per account**. Other applications can share those quotas. Community Stats uses a local ceiling of 50 or 4,500 requests respectively and also honors GitHub's remaining quota, reset time and retry headers.
 - A GitHub token is optional. Use a token with only the access needed to read public repositories; no write permissions are required. Configure it per project. Entries using the same token share a client. Changing or removing it is available in **Configure**.
+- Issue searches have a separate quota. Community Stats tracks its reset time separately, so a search-only limit does not block other repository data. Large collections may need several quota windows; the integration resumes automatically.
 - Conditional requests reuse unchanged data. GitHub exempts authenticated `304 Not Modified` responses from its primary quota; do not assume that every request receives a 304.
 
-Analytics and GitHub availability are independent. Source status and last-successful-update sensors explain missing data. The GitHub retry-time sensor indicates a rate-limit pause. A remaining-request diagnostic sensor is disabled by default; its value is the last observed shared quota, not an independently reserved allowance.
+Analytics, release downloads, repository metadata and issue-search availability are tracked independently. Source status and last-successful-update sensors explain missing data. The GitHub retry-time sensor indicates the next scheduled rate-limit retry. A remaining-request diagnostic sensor is disabled by default; its value is the last observed standard REST quota, not an independently reserved allowance or the search quota.
 
 ## Data sources and privacy
 

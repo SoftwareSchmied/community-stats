@@ -46,6 +46,21 @@ async def async_setup_entry(
             )
     if coordinator.repository:
         entities.extend(
+            RepositoryMetricSensor(coordinator, key, source, unit)
+            for key, source, unit in (
+                ("stars", "repository", "stars"),
+                ("forks", "repository", "forks"),
+                ("watchers", "repository", "watchers"),
+                ("issues_total", "issues", "issues"),
+                ("issues_open", "issues", "issues"),
+            )
+        )
+        entities.extend(
+            DiagnosticSensor(coordinator, source, kind)
+            for source in ("repository", "issues")
+            for kind in ("status", "last_success")
+        )
+        entities.extend(
             DiagnosticSensor(coordinator, "downloads", kind) for kind in ("remaining", "retry_at")
         )
     async_add_entities(entities)
@@ -114,6 +129,40 @@ class CountSensor(CommunityStatsEntity, SensorEntity):
         return attributes
 
 
+class RepositoryMetricSensor(CommunityStatsEntity, SensorEntity):
+    """Repository metrics retain histories independently of release filename filters."""
+
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_suggested_display_precision = 0
+
+    def __init__(self, coordinator, key: str, source: str, unit: str) -> None:
+        super().__init__(coordinator)
+        self.key = key
+        self.source = source
+        self._attr_translation_key = f"github_{key}"
+        self._attr_native_unit_of_measurement = unit
+        self._attr_unique_id = (
+            f"{coordinator.entry.entry_id}_repository_"
+            f"{version_key(coordinator.repository.lower())}_{key}"
+        )
+
+    @property
+    def available(self) -> bool:
+        return (
+            super().available
+            and self.coordinator.states[self.source].status == "ok"
+            and self.native_value is not None
+        )
+
+    @property
+    def native_value(self) -> int | None:
+        return self.coordinator.states[self.source].metrics.get(self.key)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        return {"source": f"https://github.com/{self.coordinator.repository}"}
+
+
 class DiagnosticSensor(CommunityStatsEntity, SensorEntity):
     """Expose source status without putting secrets into diagnostics or logs."""
 
@@ -143,6 +192,7 @@ class DiagnosticSensor(CommunityStatsEntity, SensorEntity):
             return state.last_success
         if self.kind == "remaining":
             return self.coordinator.github.remaining
-        if state.retry_at:
-            return dt_util.utc_from_timestamp(state.retry_at)
+        retry_times = [item.retry_at for item in self.coordinator.states.values() if item.retry_at]
+        if retry_times:
+            return dt_util.utc_from_timestamp(min(retry_times))
         return None

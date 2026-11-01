@@ -26,7 +26,7 @@ from .const import (
     DEFAULT_TOP,
     DOMAIN,
 )
-from .models import SourceError, normalize_repository, parse_patterns, repository_from_manifest
+from .models import SourceError, normalize_repository, repository_from_manifest
 
 TOKEN_SELECTOR = selector.TextSelector(
     selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
@@ -131,7 +131,10 @@ class CommunityStatsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     source = "custom"
                 else:
                     core = await analytics.async_get("core")
-                    if domain in core.body.get("integrations", {}) or (local and local.is_built_in):
+                    integrations = core.body.get("integrations")
+                    if not isinstance(integrations, dict):
+                        raise SourceError("invalid_data")
+                    if domain in integrations or (local and local.is_built_in):
                         source = "core"
                     else:
                         source = "custom"
@@ -198,6 +201,8 @@ class CommunityStatsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
+                self._candidate[CONF_INTEGRATION] = ""
+                self._candidate[CONF_NAME] = self._candidate[CONF_REPOSITORY].split("/")[1]
                 if user_input[CONF_INTEGRATION] != "downloads-only":
                     await self._async_read_manifest(user_input[CONF_INTEGRATION])
                 await self._async_asset_suggestions()
@@ -232,11 +237,13 @@ class CommunityStatsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 raise SourceError("invalid_data")
             if release.get("draft"):
                 continue
-            self._assets = [
-                asset["name"]
-                for asset in release.get("assets", [])
-                if isinstance(asset, dict) and isinstance(asset.get("name"), str)
-            ]
+            assets = release.get("assets")
+            if not isinstance(assets, list) or any(
+                not isinstance(asset, dict) or not isinstance(asset.get("name"), str)
+                for asset in assets
+            ):
+                raise SourceError("invalid_data")
+            self._assets = [asset["name"] for asset in assets]
             if self._assets:
                 break
         if len(self._assets) == 1:
@@ -246,11 +253,7 @@ class CommunityStatsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Confirm discovered sources and select the files to count."""
         errors = {}
         if user_input is not None:
-            if self._candidate.get(CONF_REPOSITORY) and not parse_patterns(
-                user_input.get(CONF_PATTERNS, "")
-            ):
-                errors[CONF_PATTERNS] = "patterns_required"
-            elif not user_input.get(CONF_NAME, "").strip():
+            if not user_input.get(CONF_NAME, "").strip():
                 errors[CONF_NAME] = "name_required"
             else:
                 self._candidate.update(user_input)
@@ -274,7 +277,7 @@ class CommunityStatsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             **tuning_schema(values),
         }
         if self._candidate.get(CONF_REPOSITORY):
-            fields[vol.Required(CONF_PATTERNS, default=values.get(CONF_PATTERNS, ""))] = (
+            fields[vol.Optional(CONF_PATTERNS, default=values.get(CONF_PATTERNS, ""))] = (
                 PATTERN_SELECTOR
             )
         return self.async_show_form(
@@ -311,8 +314,6 @@ class OptionsFlow(config_entries.OptionsFlow):
                     if settings.get(CONF_SOURCE) == "core" and settings.get(CONF_INTEGRATION):
                         raise SourceError("core_repository")
                     repository = normalize_repository(repository)
-                    if not parse_patterns(values.get(CONF_PATTERNS, "")):
-                        raise SourceError("patterns_required")
                     if repository != settings.get(CONF_REPOSITORY) or values[
                         CONF_ACCESS_TOKEN
                     ] != settings.get(CONF_ACCESS_TOKEN, ""):
@@ -323,6 +324,7 @@ class OptionsFlow(config_entries.OptionsFlow):
                             raise SourceError("public_repository_required")
                         repository = normalize_repository(info.get("full_name", repository))
                 values[CONF_REPOSITORY] = repository
+                entry_changes = {}
                 if not settings.get(CONF_INTEGRATION):
                     unique_id = f"github:{repository.lower()}"
                     if any(
@@ -332,9 +334,20 @@ class OptionsFlow(config_entries.OptionsFlow):
                     ):
                         raise SourceError("already_configured")
                     if self.config_entry.unique_id != unique_id:
-                        self.hass.config_entries.async_update_entry(
-                            self.config_entry, unique_id=unique_id
-                        )
+                        entry_changes["unique_id"] = unique_id
+                # Options are the only credential location after the first edit.
+                # Remove the initial copy rather than merely overriding it.
+                if CONF_ACCESS_TOKEN in self.config_entry.data:
+                    entry_changes["data"] = {
+                        key: value
+                        for key, value in self.config_entry.data.items()
+                        if key != CONF_ACCESS_TOKEN
+                    }
+                if entry_changes:
+                    # Store data and options together before an eager reload can run.
+                    self.hass.config_entries.async_update_entry(
+                        self.config_entry, options=values, **entry_changes
+                    )
                 return self.async_create_entry(data=values)
             except ValueError:
                 errors[CONF_REPOSITORY] = "invalid_repository"

@@ -153,3 +153,141 @@ async def test_rate_limit_retry_is_cancelled_on_unload(hass, source_clients):
     assert coordinator._cancel_retry is not None
     await hass.config_entries.async_unload(entry.entry_id)
     assert coordinator._cancel_retry is None
+
+
+async def test_old_overridden_token_is_removed_during_setup(hass, source_clients):
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Token migration",
+        data={
+            "integration_domain": "test_project",
+            "analytics_source": "custom",
+            "repository": "",
+            CONF_ACCESS_TOKEN: "obsolete-test-value",
+        },
+        options={CONF_ACCESS_TOKEN: ""},
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert CONF_ACCESS_TOKEN not in entry.data
+    assert entry.runtime_data.settings[CONF_ACCESS_TOKEN] == ""
+
+
+async def test_live_options_token_removal_reloads_with_empty_credentials(hass, source_clients):
+    entry = await setup_project(hass, repository="", **{CONF_ACCESS_TOKEN: "obsolete-test-value"})
+    before = entity_id(hass, entry, "installations")
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            "top_versions": 1,
+            "include_prereleases": True,
+            "update_interval": 12,
+            "repository": "",
+            "asset_patterns": "",
+            "clear_token": True,
+        },
+    )
+    await hass.async_block_till_done()
+    assert CONF_ACCESS_TOKEN not in entry.data
+    assert entry.runtime_data.settings[CONF_ACCESS_TOKEN] == ""
+    assert entity_id(hass, entry, "installations") == before
+    assert hass.states.get(before).state == "120"
+
+
+async def test_active_repository_change_uses_new_repository_immediately(hass, source_clients):
+    from unittest.mock import patch
+
+    _, github = source_clients
+    github.async_json.return_value = {"full_name": "owner/new", "private": False}
+    entry = await setup_project(hass, integration_domain="")
+    original = entity_id(hass, entry, "downloads")
+    with patch("custom_components.community_stats.config_flow.get_github", return_value=github):
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+        await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {
+                "top_versions": 1,
+                "include_prereleases": True,
+                "update_interval": 12,
+                "repository": "owner/new",
+                "asset_patterns": "*.zip",
+                "clear_token": False,
+            },
+        )
+        await hass.async_block_till_done()
+    assert entry.runtime_data.repository == "owner/new"
+    assert entity_id(hass, entry, "downloads") != original
+    github.async_releases.assert_awaited_with("owner/new")
+
+
+async def test_update_entity_and_button_share_cached_http_data(hass, aioclient_mock, releases):
+    from urllib.parse import urlencode
+
+    from homeassistant.setup import async_setup_component
+
+    from custom_components.community_stats.const import CUSTOM_URL, GITHUB_API
+
+    assert await async_setup_component(hass, "homeassistant", {})
+    aioclient_mock.get(CUSTOM_URL, json={"test_project": {"total": 5, "versions": {"0.8.2": 5}}})
+    aioclient_mock.get(f"{GITHUB_API}/repos/owner/repo/releases?per_page=100&page=1", json=releases)
+    aioclient_mock.get(
+        f"{GITHUB_API}/repos/owner/repo",
+        json={
+            "stargazers_count": 1,
+            "forks_count": 2,
+            "subscribers_count": 3,
+        },
+    )
+    for suffix in ("", " is:open"):
+        query = urlencode({"q": f"repo:owner/repo is:issue{suffix}", "per_page": 1})
+        aioclient_mock.get(
+            f"{GITHUB_API}/search/issues?{query}",
+            json={
+                "total_count": 5,
+                "incomplete_results": False,
+            },
+        )
+    entry = await setup_project(hass)
+    sensor = entity_id(hass, entry, "downloads")
+    button = er.async_get(hass).async_get_entity_id("button", DOMAIN, f"{entry.entry_id}_refresh")
+    await hass.services.async_call(
+        "homeassistant", "update_entity", {"entity_id": sensor}, blocking=True
+    )
+    await hass.services.async_call("button", "press", {"entity_id": button}, blocking=True)
+    await hass.async_block_till_done()
+    assert aioclient_mock.call_count == 5
+    assert hass.states.get(sensor).state == "190"
+
+
+async def test_source_retry_runs_when_rate_limit_expires(hass, source_clients, freezer):
+    from datetime import timedelta
+
+    from pytest_homeassistant_custom_component.common import async_fire_time_changed
+
+    _, github = source_clients
+    snapshot = github.async_releases.return_value
+    github.async_releases.side_effect = [
+        SourceError("rate_limited", dt_util.utcnow().timestamp() + 3600),
+        snapshot,
+    ]
+    entry = await setup_project(hass)
+    sensor = entity_id(hass, entry, "downloads")
+    assert hass.states.get(sensor).state == STATE_UNAVAILABLE
+    freezer.tick(timedelta(seconds=3601))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(sensor).state == "190"
+
+
+async def test_turning_off_prereleases_retains_previously_selected_sensor(hass, source_clients):
+    entry = await setup_project(hass, top_versions=3)
+    beta = entity_id(hass, entry, "installations", "0.8.3-beta.1")
+    assert hass.states.get(beta).state == "30"
+    hass.config_entries.async_update_entry(
+        entry, options={"include_prereleases": False, "top_versions": 1}
+    )
+    await hass.async_block_till_done()
+    assert entity_id(hass, entry, "installations", "0.8.3-beta.1") == beta
+    assert hass.states.get(beta).state == "30"

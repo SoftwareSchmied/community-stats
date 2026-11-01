@@ -16,6 +16,14 @@ python scripts/build_release.py
 
 Tests run with external sockets disabled. They exercise the real Home Assistant config flow, config entries, entity registry, sensors and unload/reload lifecycle. Public source data is replaced with controlled responses for rate limits, exact versions and failure recovery.
 
+The Recorder test additionally compiles actual hourly statistics for decreasing installation counts. To exercise a release archive against public data in a temporary Home Assistant instance, including a full stop and startup, run:
+
+```sh
+python scripts/check_release_install.py dist/community_stats.zip
+```
+
+This optional check requires network access and can install additional Home Assistant bootstrap dependencies into the development environment. It loads the archive into a fresh temporary configuration and does not connect to an existing Home Assistant installation.
+
 The brand images are original geometric artwork. To regenerate them, install Pillow in a development environment and run `python scripts/build_brand.py`; Pillow is not a runtime dependency.
 
 ## Release
