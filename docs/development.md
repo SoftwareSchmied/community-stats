@@ -46,4 +46,4 @@ gh release create v0.1.0 dist/community_stats.zip --verify-tag --title "Communit
 
 The [HACS inclusion requirements](https://www.hacs.xyz/docs/publish/include/) require a public repository with a description, topics, issues, an OSI-approved license, valid local brand assets, successful HACS/Hassfest actions and a full GitHub release created after those checks.
 
-Once these requirements are met, the repository owner can add `SoftwareSchmied/community-stats` in alphabetical order to the `integration` JSON list in `hacs/default`, using a dedicated branch in their fork. Complete the pull request template with links to the release and successful action runs. Inclusion remains subject to the maintainers' review; custom-repository installation works independently of that queue.
+Community Stats was added to the default catalog on November 2, 2026, through [hacs/default#13057](https://github.com/hacs/default/pull/13057). Users can find it directly in HACS or the Marketplace. Custom-repository installation remains available as an alternative.

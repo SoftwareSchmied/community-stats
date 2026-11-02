@@ -18,12 +18,14 @@ Requires Home Assistant **2026.10 or newer**. Community Stats uses Home Assistan
 
 ### HACS / Marketplace
 
-Until the repository is included in the default catalog, add it as a custom repository:
+Community Stats is included in the HACS default catalog.
 
 1. Open HACS, or the Marketplace in Home Assistant versions that include it.
-2. Open **Custom repositories** and add `https://github.com/SoftwareSchmied/community-stats` with category **Integration**.
+2. Search for **Community Stats** and open its repository page.
 3. Download **Community Stats** and restart Home Assistant.
 4. Open **Settings → Devices & services → Add integration → Community Stats**.
+
+If Community Stats does not appear in your catalog yet, you can also open **Custom repositories**, add `https://github.com/SoftwareSchmied/community-stats` with category **Integration**, and continue from step 3.
 
 Alternatively, download `community_stats.zip` from the [latest release](https://github.com/SoftwareSchmied/community-stats/releases/latest), extract its contents into `config/custom_components/community_stats/`, and restart Home Assistant. Do not nest a second `community_stats` directory inside it.
 
@@ -148,6 +150,6 @@ Community Stats reads the public sources and stores sensor history locally throu
 
 ## Development and releases
 
-See [development and release instructions](docs/development.md). Pull requests and pushes run the tests, Hassfest and HACS validation. Catalog inclusion is a separate review by the HACS/Marketplace maintainers; a working custom repository does not imply that review is complete.
+See [development and release instructions](docs/development.md). Pull requests and pushes run the tests, Hassfest and HACS validation. Community Stats was [approved for the HACS default catalog](https://github.com/hacs/default/pull/13057) on November 2, 2026.
 
 Maintained by [SoftwareSchmied](https://github.com/SoftwareSchmied). Licensed under [MIT](LICENSE).

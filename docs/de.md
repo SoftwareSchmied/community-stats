@@ -6,12 +6,14 @@ Community Stats stellt gemeldete Installationszahlen, GitHub-Release-Downloads s
 
 Voraussetzung: **Home Assistant 2026.10 oder neuer**.
 
-Bis zur Aufnahme in den öffentlichen Katalog:
+Community Stats ist im HACS-Standardkatalog enthalten.
 
-1. In HACS beziehungsweise im Marketplace **Benutzerdefinierte Repositories** öffnen.
-2. `https://github.com/SoftwareSchmied/community-stats` als **Integration** hinzufügen.
+1. HACS beziehungsweise den Marketplace öffnen.
+2. Nach **Community Stats** suchen und die Repository-Seite öffnen.
 3. Community Stats herunterladen und Home Assistant neu starten.
 4. **Einstellungen → Geräte & Dienste → Integration hinzufügen → Community Stats** öffnen.
+
+Falls Community Stats noch nicht in deinem Katalog erscheint, kannst du unter **Benutzerdefinierte Repositories** weiterhin `https://github.com/SoftwareSchmied/community-stats` als **Integration** hinzufügen und mit Schritt 3 fortfahren.
 
 Alternativ das Release-Archiv `community_stats.zip` nach `config/custom_components/community_stats/` entpacken und Home Assistant neu starten.
 
