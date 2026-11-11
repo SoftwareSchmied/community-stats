@@ -104,8 +104,11 @@ class CountSensor(CommunityStatsEntity, SensorEntity):
 
     @property
     def available(self) -> bool:
-        state = self.coordinator.states[self.source]
-        return super().available and state.status == "ok" and self.native_value is not None
+        return (
+            super().available
+            and self.coordinator.usable(self.source)
+            and self.native_value is not None
+        )
 
     @property
     def native_value(self) -> int | None:
@@ -162,7 +165,7 @@ class RepositoryMetricSensor(CommunityStatsEntity, SensorEntity):
     def available(self) -> bool:
         return (
             super().available
-            and self.coordinator.states[self.source].status == "ok"
+            and self.coordinator.usable(self.source)
             and self.native_value is not None
         )
 

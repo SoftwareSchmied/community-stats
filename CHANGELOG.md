@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.1
+
+- Keep the last complete counts and attributes visible for up to 24 hours (or three update intervals) when GitHub or Analytics is temporarily unreachable or rate limited. Dashboards relying on attributes such as `release_tag` no longer lose all download versions after a single failed request.
+- Keep configuration errors such as a missing repository, an invalid token or no matching files immediately unavailable.
+- Log source failures and recoveries once per change, including the HTTP status or network error.
+
 ## 0.4.0
 
 - Select GitHub download versions by release publication time so new releases appear even with zero downloads.

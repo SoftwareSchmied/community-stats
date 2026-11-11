@@ -14,10 +14,12 @@ from packaging.version import InvalidVersion, Version
 class SourceError(Exception):
     """A source is unavailable; never substitute zero for this condition."""
 
-    def __init__(self, code: str, retry_at: float | None = None) -> None:
+    def __init__(self, code: str, retry_at: float | None = None, detail: str | None = None) -> None:
         super().__init__(code)
         self.code = code
         self.retry_at = retry_at
+        # Technical cause for the log only; never contains credentials.
+        self.detail = detail
 
 
 @dataclass

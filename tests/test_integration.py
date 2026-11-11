@@ -1,5 +1,7 @@
 """Exercise real Home Assistant setup, entity registry and source updates."""
 
+import logging
+
 import pytest
 from homeassistant.const import CONF_ACCESS_TOKEN, STATE_UNAVAILABLE
 from homeassistant.helpers import entity_registry as er
@@ -98,11 +100,70 @@ async def test_source_failures_are_independent(hass, source_clients, failed_sour
     if failed_source == "downloads":
         github.async_releases.side_effect = SourceError("invalid_auth")
     else:
-        analytics.async_get.side_effect = SourceError("cannot_connect")
+        analytics.async_get.side_effect = SourceError("not_found")
     await entry.runtime_data.async_refresh()
     other = "downloads" if failed_source == "installations" else "installations"
     assert hass.states.get(entity_id(hass, entry, failed_source)).state == STATE_UNAVAILABLE
     assert hass.states.get(entity_id(hass, entry, other)).state != STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("code", ["cannot_connect", "rate_limited"])
+async def test_transient_failure_keeps_last_complete_values(hass, source_clients, caplog, code):
+    analytics, github = source_clients
+    entry = await setup_project(hass)
+    version = entity_id(hass, entry, "downloads", "v0.8.3-beta.1")
+    github.async_releases.side_effect = SourceError(code, detail="HTTP 502")
+    analytics.async_get.side_effect = SourceError(code)
+    caplog.set_level(logging.INFO, logger="custom_components.community_stats")
+    caplog.clear()
+    await entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+    assert entry.runtime_data.states["downloads"].status == code
+    assert hass.states.get(entity_id(hass, entry, "downloads")).state == "190"
+    assert hass.states.get(entity_id(hass, entry, "installations")).state == "120"
+    state = hass.states.get(version)
+    assert state.state == "40"
+    assert state.attributes["release_tag"] == "v0.8.3-beta.1"
+    assert f"downloads update failed: {code} (HTTP 502); keeping" in caplog.text
+    caplog.clear()
+    await entry.runtime_data.async_refresh()
+    assert "update failed" not in caplog.text
+    github.async_releases.side_effect = None
+    analytics.async_get.side_effect = None
+    await entry.runtime_data.async_refresh()
+    assert f"downloads update recovered after {code}" in caplog.text
+
+
+async def test_transient_failure_without_earlier_values_stays_unavailable(hass, source_clients):
+    _, github = source_clients
+    github.async_releases.side_effect = SourceError("cannot_connect")
+    entry = await setup_project(hass)
+    assert hass.states.get(entity_id(hass, entry, "downloads")).state == STATE_UNAVAILABLE
+
+
+async def test_stale_values_become_unavailable_after_one_day(hass, source_clients, freezer):
+    from datetime import timedelta
+
+    analytics, github = source_clients
+    entry = await setup_project(hass, update_interval=1)
+    sensor = entity_id(hass, entry, "downloads")
+    github.async_releases.side_effect = SourceError("cannot_connect")
+    analytics.async_get.side_effect = SourceError("cannot_connect")
+    freezer.tick(timedelta(hours=23))
+    await entry.runtime_data.async_refresh()
+    assert hass.states.get(sensor).state == "190"
+    freezer.tick(timedelta(hours=2))
+    await entry.runtime_data.async_refresh()
+    assert hass.states.get(sensor).state == STATE_UNAVAILABLE
+    assert hass.states.get(entity_id(hass, entry, "installations")).state == STATE_UNAVAILABLE
+
+
+async def test_configuration_errors_never_keep_old_values(hass, source_clients):
+    _, github = source_clients
+    entry = await setup_project(hass)
+    github.async_releases.side_effect = SourceError("not_found")
+    await entry.runtime_data.async_refresh()
+    assert hass.states.get(entity_id(hass, entry, "downloads")).state == STATE_UNAVAILABLE
 
 
 async def test_no_data_at_first_setup_still_exposes_unavailable_totals(hass, source_clients):

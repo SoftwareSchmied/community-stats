@@ -1,3 +1,16 @@
+# Validation of 0.4.1
+
+Validated on 11 November 2026 with Home Assistant 2026.10.4 and Python 3.14.7 on Linux.
+
+| Check | Result |
+| --- | --- |
+| Automated suite | 124 tests pass with external sockets disabled |
+| Coverage including branches | 92.49% |
+| Ruff lint and formatting | Pass |
+| Hassfest and HACS | Validate workflow on the release commit |
+
+New tests cover connection failures and rate limits after a successful update for GitHub and Analytics, retained version attributes, the 24-hour limit, configuration errors, failures before the first observation, one log entry per status change and HTTP status details. The archive installation and public-source checks below were last run for 0.4.0; this release does not change setup, entity identities or requests.
+
 # Validation of 0.4.0
 
 Validated on 1 November 2026 with Home Assistant 2026.10.4 and Python 3.14.7 on Linux.

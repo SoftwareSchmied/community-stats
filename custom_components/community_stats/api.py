@@ -18,6 +18,12 @@ from .const import CORE_URL, CUSTOM_URL, DOMAIN, GITHUB_API, MIN_REFRESH_SECONDS
 from .models import Snapshot, SourceError, valid_count
 
 
+def describe(err: BaseException) -> str:
+    """Name a network failure for the log; request headers are never included."""
+    text = str(err).strip()
+    return f"{type(err).__name__}: {text}"[:200] if text else type(err).__name__
+
+
 @dataclass
 class CachedResponse:
     """A response body and its conditional-request metadata."""
@@ -52,12 +58,12 @@ class AnalyticsClient:
                         CUSTOM_URL if source == "custom" else CORE_URL
                     ) as response:
                         if response.status != 200:
-                            raise SourceError("cannot_connect")
+                            raise SourceError("cannot_connect", detail=f"HTTP {response.status}")
                         body = await response.json()
                         if not isinstance(body, dict):
                             raise SourceError("invalid_data")
             except (ClientError, TimeoutError, ValueError) as err:
-                error = SourceError("cannot_connect")
+                error = SourceError("cannot_connect", detail=describe(err))
                 self.errors[source] = (now + MIN_REFRESH_SECONDS, error)
                 raise error from err
             except SourceError as err:
@@ -172,7 +178,7 @@ class GitHubClient:
             headers = {
                 "Accept": "application/vnd.github+json",
                 "X-GitHub-Api-Version": "2022-11-28",
-                "User-Agent": "Community-Stats/0.4.0",
+                "User-Agent": "Community-Stats/0.4.1",
             }
             if self._token:
                 headers["Authorization"] = f"Bearer {self._token}"
@@ -239,7 +245,7 @@ class GitHubClient:
                                 raise self._set_retry(blocked_resource, max(now + 60, retry_at))
                             raise SourceError("access_denied")
                         if response.status != 200:
-                            raise SourceError("cannot_connect")
+                            raise SourceError("cannot_connect", detail=f"HTTP {response.status}")
                         body = await response.json()
                         item = CachedResponse(
                             body,
@@ -254,7 +260,7 @@ class GitHubClient:
                             self.retry_at = None
                         return item
             except (ClientError, TimeoutError, ValueError) as err:
-                failure = SourceError("cannot_connect")
+                failure = SourceError("cannot_connect", detail=describe(err))
                 self._failures[path] = (now + MIN_REFRESH_SECONDS, failure)
                 raise failure from err
             except SourceError as err:

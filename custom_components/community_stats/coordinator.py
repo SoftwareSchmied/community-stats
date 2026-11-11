@@ -26,6 +26,8 @@ from .const import (
     DEFAULT_INTERVAL,
     DEFAULT_TOP,
     DOMAIN,
+    STALE_SECONDS,
+    TRANSIENT_ERRORS,
 )
 from .models import (
     Counts,
@@ -153,10 +155,44 @@ class CommunityStatsCoordinator(DataUpdateCoordinator[dict[str, SourceState]]):
             return bool(self.repository and self.patterns)
         return bool(self.integration_domain if source == "installations" else self.repository)
 
+    def usable(self, source: str) -> bool:
+        """Keep complete earlier counts visible through short transient outages."""
+        state = self.states[source]
+        if state.status == "ok":
+            return True
+        if state.status not in TRANSIENT_ERRORS or state.last_success is None:
+            return False
+        limit = max(STALE_SECONDS, 3 * self.update_interval.total_seconds())
+        return (dt_util.utcnow() - state.last_success).total_seconds() <= limit
+
+    def _log_status(self, source: str, previous: str, err: SourceError | None = None) -> None:
+        """Log transitions only, so a lasting outage does not repeat every update."""
+        if err is None:
+            if previous not in ("ok", "disabled", "waiting"):
+                _LOGGER.info("%s: %s update recovered after %s", self.entry.title, source, previous)
+            return
+        if err.code == previous:
+            return
+        kept = (
+            "; keeping the last successful values"
+            if err.code in TRANSIENT_ERRORS and self.states[source].last_success
+            else ""
+        )
+        _LOGGER.log(
+            logging.INFO if err.code == "rate_limited" else logging.WARNING,
+            "%s: %s update failed: %s%s%s",
+            self.entry.title,
+            source,
+            err.code,
+            f" ({err.detail})" if err.detail else "",
+            kept,
+        )
+
     async def _async_update_source(self, source: str) -> None:
         if not self.enabled(source):
             return
         state = self.states[source]
+        previous = state.status
         try:
             if source == "installations":
                 snapshot = await self.analytics.async_get(self.analytics_source)
@@ -177,7 +213,9 @@ class CommunityStatsCoordinator(DataUpdateCoordinator[dict[str, SourceState]]):
             state.last_success = snapshot.fetched_at
             state.status = "ok"
             state.retry_at = None
+            self._log_status(source, previous)
         except SourceError as err:
+            self._log_status(source, previous, err)
             state.status = err.code
             state.retry_at = err.retry_at
 

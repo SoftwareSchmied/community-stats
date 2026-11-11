@@ -27,8 +27,9 @@ async def test_analytics_failure_does_not_return_stale_data(hass, aioclient_mock
     freezer.tick(301)
     aioclient_mock.clear_requests()
     aioclient_mock.get(CUSTOM_URL, status=503)
-    with pytest.raises(SourceError, match="cannot_connect"):
+    with pytest.raises(SourceError, match="cannot_connect") as error:
         await client.async_get("custom")
+    assert error.value.detail == "HTTP 503"
     with pytest.raises(SourceError, match="cannot_connect"):
         await client.async_get("custom")
     assert aioclient_mock.call_count == 1
@@ -157,6 +158,15 @@ async def test_non_json_response_is_unavailable_and_has_cooldown(hass, aioclient
     aioclient_mock.get(f"{GITHUB_API}/repos/owner/repo", text="<html>Unavailable</html>")
     client = GitHubClient(async_get_clientsession(hass), "")
     for _ in range(2):
-        with pytest.raises(SourceError, match="cannot_connect"):
+        with pytest.raises(SourceError, match="cannot_connect") as error:
             await client.async_json("/repos/owner/repo")
+    assert error.value.detail
     assert aioclient_mock.call_count == 1
+
+
+async def test_server_error_reports_http_status(hass, aioclient_mock):
+    aioclient_mock.get(f"{GITHUB_API}/repos/owner/repo", status=502)
+    client = GitHubClient(async_get_clientsession(hass), "token")
+    with pytest.raises(SourceError, match="cannot_connect") as error:
+        await client.async_json("/repos/owner/repo")
+    assert error.value.detail == "HTTP 502"
